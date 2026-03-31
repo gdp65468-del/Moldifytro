@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #161312;
+  background:
+    radial-gradient(circle at top left, rgba(204, 95, 26, 0.18), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(29, 58, 47, 0.2), transparent 40%),
+    linear-gradient(180deg, #f7efe1 0%, #f2e8d5 45%, #ecdfca 100%);
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #161312;
+  overflow-x: hidden;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.editor-stage canvas {
+  border-radius: 28px;
+}
+
+.editor-stage {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}

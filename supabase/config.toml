@@ -1,0 +1,77 @@
+project_id = "moldifytro"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[functions.admin-status]
+verify_jwt = false
+
+[functions.admin-overview]
+verify_jwt = false
+
+[functions.admin-list-templates]
+verify_jwt = false
+
+[functions.admin-list-payments]
+verify_jwt = false
+
+[functions.admin-list-users]
+verify_jwt = false
+
+[functions.admin-platform-list]
+verify_jwt = false
+
+[functions.admin-platform-toggle]
+verify_jwt = false
+
+[functions.admin-platform-update]
+verify_jwt = false
+
+[functions.admin-platform-delete]
+verify_jwt = false
+
+[functions.admin-platform-create]
+verify_jwt = false
+
+[functions.admin-set-template-visibility]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.publish-template]
+verify_jwt = false
+
+[functions.track-template-use]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false
+
+[functions.trash-template]
+verify_jwt = false
+
+[functions.restore-template]
+verify_jwt = false
+
+[functions.delete-template-permanently]
+verify_jwt = false
+
+[functions.empty-trash]
+verify_jwt = false

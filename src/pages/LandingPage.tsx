@@ -1,0 +1,219 @@
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
+import { Panel } from "@/components/ui/Panel";
+import { StatusPanel } from "@/components/ui/StatusPanel";
+import { useAuth } from "@/hooks/useAuth";
+import { usePlatformTemplates } from "@/hooks/usePlatformTemplates";
+
+export function LandingPage() {
+  const { user } = useAuth();
+  const platformTemplatesQuery = usePlatformTemplates();
+  const platformTemplates = platformTemplatesQuery.data ?? [];
+
+  return (
+    <div className="space-y-8 pb-24 sm:space-y-10 md:pb-0">
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold text-ink sm:text-2xl">Molduras da plataforma</h2>
+            <p className="text-sm text-stone-500">Escolha uma base pronta e comece mais rapido.</p>
+          </div>
+          <Link to="/dashboard" className="hidden sm:inline-flex">
+            <Button variant="secondary">Ver no painel</Button>
+          </Link>
+        </div>
+
+        {platformTemplatesQuery.isLoading ? (
+          <StatusPanel
+            title="Carregando molduras da plataforma"
+            description="Buscando as molduras ativas para mostrar na vitrine."
+            loading
+            compact
+          />
+        ) : platformTemplatesQuery.isError ? (
+          <StatusPanel
+            title="Nao foi possivel abrir a vitrine"
+            description={
+              platformTemplatesQuery.error instanceof Error
+                ? platformTemplatesQuery.error.message
+                : "Tente atualizar a pagina para carregar as molduras."
+            }
+            tone="warning"
+            compact
+          />
+        ) : platformTemplates.length ? (
+          <div className="-mx-2 flex gap-3 overflow-x-auto px-2 pb-2 touch-pan-x overscroll-x-contain sm:gap-4">
+            {platformTemplates.map((template) => (
+              <Panel
+                key={template.id}
+                variant="compact"
+                size="sm"
+                className="flex min-w-[168px] max-w-[168px] flex-col gap-3 border-white/90 p-3 sm:min-w-[190px] sm:max-w-[190px]"
+              >
+                <div className="rounded-[20px] border border-white/90 bg-white/94 p-2.5">
+                  <img
+                    src={template.thumbnailUrl}
+                    alt={template.title}
+                    className="mx-auto aspect-[4/5] w-full rounded-[14px] object-contain"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="line-clamp-1 text-sm font-semibold text-ink">{template.title}</h3>
+                    <span className="rounded-full bg-[#fff4e8] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-ember">
+                      Base
+                    </span>
+                  </div>
+                  <p className="line-clamp-2 text-xs leading-5 text-stone-600">
+                    Base visual pronta para montar seu template em poucos cliques.
+                  </p>
+                </div>
+                <Link className="mt-auto inline-flex" to={`/editor/new/frame?platform=${template.id}`}>
+                  <Button variant="secondary" className="w-full px-3 py-2 text-xs">
+                    Usar moldura
+                  </Button>
+                </Link>
+              </Panel>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel
+          variant="hero"
+          size="lg"
+          className="bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.2),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(29,58,47,0.14),transparent_30%),linear-gradient(140deg,rgba(255,248,239,0.98),rgba(255,255,255,0.92))]"
+        >
+          <span className="inline-flex rounded-full border border-white/80 bg-white/88 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-ember">
+            Studio Moldify
+          </span>
+          <div className="mt-5 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div>
+              <h1 className="max-w-3xl font-display text-3xl font-bold leading-tight text-ink sm:text-5xl lg:text-6xl">
+                Crie molduras bonitas, publique seu link e deixe cada pessoa montar a propria arte.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-stone-700 sm:text-lg">
+                Monte seus templates, aproveite molduras da plataforma e publique uma pagina simples,
+                bonita e pronta para divulgar no celular ou no desktop.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to={user ? "/dashboard" : "/login"}>
+                  <Button>{user ? "Abrir painel" : "Entrar para criar"}</Button>
+                </Link>
+                <Link to="/dashboard">
+                  <Button variant="secondary">Ver como funciona</Button>
+                </Link>
+              </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                {[
+                  ["Edicao simples", "Envie a imagem, ajuste o enquadramento e exporte em poucos toques."],
+                  ["Pagina publica", "Compartilhe um unico link para varias pessoas criarem a propria arte."],
+                  ["Publicacao direta", "Salve, pague e libere o template no mesmo fluxo."],
+                ].map(([title, text]) => (
+                  <div
+                    key={title}
+                    className="rounded-[24px] border border-white/80 bg-white/76 p-4 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.18)]"
+                  >
+                    <div className="text-sm font-semibold text-ink">{title}</div>
+                    <p className="mt-2 text-sm leading-6 text-stone-600">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[30px] border border-white/90 bg-white/84 p-5 shadow-[0_24px_50px_-34px_rgba(22,19,18,0.22)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ember">
+                  Visao geral
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold text-ink">Do envio da foto ao link publicado</h3>
+                <p className="mt-3 text-sm leading-6 text-stone-600">
+                  Um caminho claro para criar, publicar e compartilhar sem transformar a tela em painel
+                  confuso.
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-[22px] bg-[#fff6ea] p-4">
+                    <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Etapa</div>
+                    <div className="mt-2 text-lg font-semibold text-ink">Envio, ajuste e download</div>
+                  </div>
+                  <div className="rounded-[22px] bg-[#f3f6f1] p-4">
+                    <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Entrega</div>
+                    <div className="mt-2 text-lg font-semibold text-ink">Link publico pronto para divulgar</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-white/85 bg-white/76 p-5 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.16)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+                  Para quem serve
+                </p>
+                <p className="mt-3 text-sm leading-6 text-stone-600">
+                  Eventos, escolas, igrejas, equipes, patrocinadores e campanhas que precisam de uma arte
+                  pronta para compartilhar.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Panel>
+
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
+          <Panel variant="dark" size="lg">
+            <h2 className="font-display text-2xl font-bold">Dois tipos de template</h2>
+            <div className="mt-5 space-y-3">
+              {[
+                ["Moldura completa", "Ideal para evento, corrida, escola, igreja e campanhas sazonais."],
+                ["Logo sobreposta", "Perfeito para marca, patrocinio, selo visual e equipes."],
+              ].map(([title, text]) => (
+                <div key={title} className="rounded-[22px] border border-white/10 bg-white/8 p-4">
+                  <div className="font-semibold text-white">{title}</div>
+                  <p className="mt-2 text-sm leading-6 text-stone-200">{text}</p>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel variant="soft" className="bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(248,239,226,0.98))]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-ember">
+                  Publicacao
+                </p>
+                <h3 className="mt-2 font-display text-3xl font-bold text-ink">R$ 5,90</h3>
+              </div>
+              <div className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700">
+                Por template
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-stone-600">
+              Cada template publicado libera um link pronto para divulgar, com uma experiencia simples para
+              quem vai criar a arte.
+            </p>
+            <div className="mt-5 rounded-[22px] border border-stone-200/80 bg-white/86 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-stone-500">O que voce recebe</div>
+              <div className="mt-2 text-lg font-semibold text-ink">Pagamento, publicacao e link no mesmo fluxo</div>
+            </div>
+          </Panel>
+        </div>
+      </section>
+
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-[1.2fr_0.8fr_0.8fr]">
+        {[
+          ["1", "Escolha o fluxo", "Crie um template com moldura completa ou logo sobreposta."],
+          ["2", "Monte o visual", "Envie foto, logo ou moldura, arraste e exporte seu preview."],
+          ["3", "Publique e compartilhe", "Pague a publicacao e gere um link publico reutilizavel."],
+        ].map(([step, title, text], index) => (
+          <Panel
+            key={step}
+            variant={index === 0 ? "hero" : "compact"}
+            className={index === 0 ? "md:row-span-2" : ""}
+          >
+            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-ember">{step}</div>
+            <h3 className="mt-3 text-xl font-semibold text-ink">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-600">{text}</p>
+          </Panel>
+        ))}
+      </section>
+    </div>
+  );
+}
