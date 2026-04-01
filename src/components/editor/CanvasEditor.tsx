@@ -1121,6 +1121,19 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 <span className="mt-1">Foto</span>
               </button>
 
+              <button
+                type="button"
+                className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                  activeDock === "output"
+                    ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                    : "bg-white text-stone-700"
+                }`}
+                onClick={() => setActiveDock("output")}
+              >
+                <span className="text-base leading-none">↓</span>
+                <span className="mt-1">Baixar</span>
+              </button>
+
               {textEditable ? (
                 <button
                   type="button"
@@ -1170,18 +1183,6 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 <span className="mt-1">Ajustes</span>
               </button>
 
-              <button
-                type="button"
-                className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
-                  activeDock === "output"
-                    ? "bg-ember text-white shadow-lg shadow-orange-500/20"
-                    : "bg-white text-stone-700"
-                }`}
-                onClick={() => setActiveDock("output")}
-              >
-                <span className="text-base leading-none">↓</span>
-                <span className="mt-1">Saida</span>
-              </button>
             </div>
           </div>
 
