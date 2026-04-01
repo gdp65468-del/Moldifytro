@@ -21,8 +21,12 @@ export function CookieNotice() {
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ember">Cookies e privacidade</p>
           <p className="mt-2 text-sm leading-6 text-stone-700">
-            O Moldify usa cookies e armazenamento local essenciais para login, seguranca, funcionamento do editor
-            e continuidade da sessao. Veja os detalhes em{" "}
+            O Moldify usa cookies e armazenamento local essenciais para login, seguranca, continuidade da sessao
+            e funcionamento do editor. Veja como isso funciona em{" "}
+            <Link to="/termos" className="font-semibold text-ember">
+              Termos
+            </Link>
+            ,{" "}
             <Link to="/privacidade" className="font-semibold text-ember">
               Privacidade
             </Link>{" "}

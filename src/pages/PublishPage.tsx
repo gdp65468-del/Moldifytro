@@ -152,7 +152,7 @@ export function PublishPage() {
     { label: "Preco", value: "R$ 5,90" },
   ];
   const shareText =
-    "Abra este link para criar seu proprio filtro, ajustar sua foto e baixar a arte pronta em segundos no Moldify.";
+    "Abra este link para criar sua propria arte, ajustar a foto e baixar o resultado pronto em segundos no Moldify.";
 
   async function handleCopyLink() {
     if (!shareUrl) {
@@ -245,7 +245,7 @@ export function PublishPage() {
             </div>
 
             <div className="rounded-[20px] border border-white/90 bg-white/78 px-4 py-3 text-sm leading-5 text-stone-600">
-              Organize o pagamento, acompanhe o status e libere o link publico sem sair desta etapa.
+              Finalize a publicacao, acompanhe o pagamento e entregue um link pronto para divulgar sua campanha.
             </div>
           </div>
         </div>
@@ -288,7 +288,7 @@ export function PublishPage() {
             </div>
             <div className="rounded-[24px] border border-white/90 bg-white/86 p-4 text-sm text-stone-700 break-all">
               <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                Envie este link para outras pessoas criarem o proprio filtro
+                Envie este link para outras pessoas criarem a propria arte
               </div>
               {shareUrl}
             </div>

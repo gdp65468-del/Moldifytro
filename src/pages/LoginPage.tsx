@@ -24,7 +24,7 @@ export function LoginPage() {
       <Panel size="sm" className="text-center">
         <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Entrar no Moldify</h1>
         <p className="mt-2 text-sm leading-5 text-stone-600 sm:text-base">
-          Acesse sua conta para continuar suas criacoes, publicar links e acompanhar seus templates.
+          Entre para montar artes da sua campanha, publicar links e acompanhar cada template em um so lugar.
         </p>
 
         <Button
@@ -101,6 +101,22 @@ export function LoginPage() {
           <Link to="/signup" className="font-semibold text-ember">
             Criar minha conta
           </Link>
+        </p>
+
+        <p className="mt-3 text-xs leading-5 text-stone-500">
+          Ao continuar, voce concorda com nossos{" "}
+          <Link to="/termos" className="font-semibold text-ember">
+            Termos
+          </Link>
+          ,{" "}
+          <Link to="/privacidade" className="font-semibold text-ember">
+            Privacidade
+          </Link>{" "}
+          e{" "}
+          <Link to="/cookies" className="font-semibold text-ember">
+            Cookies
+          </Link>
+          .
         </p>
       </Panel>
     </div>

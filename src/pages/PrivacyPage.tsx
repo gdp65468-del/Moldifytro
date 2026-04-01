@@ -1,5 +1,5 @@
 import { Panel } from "@/components/ui/Panel";
-import { PRIVACY_EFFECTIVE_DATE, PRIVACY_CONTACT_EMAIL, getPrivacyContactLabel } from "@/lib/legal";
+import { PRIVACY_CONTACT_EMAIL, PRIVACY_EFFECTIVE_DATE, getPrivacyContactLabel } from "@/lib/legal";
 
 const sharedServices = [
   "Supabase para autenticacao, sessao, banco de dados e armazenamento de arquivos.",
@@ -44,9 +44,8 @@ export function PrivacyPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ember">Politica de privacidade</p>
         <h1 className="mt-3 font-display text-4xl font-bold text-ink">Como o Moldify trata seus dados</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-700 md:text-base">
-          Esta politica explica quais dados pessoais podem ser tratados no Moldify, para quais finalidades,
-          com quem eles podem ser compartilhados e quais direitos voce pode exercer como titular, nos termos da
-          Lei Geral de Protecao de Dados Pessoais.
+          Esta politica explica, de forma clara, quais dados podem ser tratados no Moldify, por que isso
+          acontece, com quem eles podem ser compartilhados e quais direitos voce pode exercer como titular.
         </p>
         <div className="mt-5 rounded-[22px] border border-white/90 bg-white/82 px-4 py-4 text-sm text-stone-700">
           Versao em vigor desde {PRIVACY_EFFECTIVE_DATE}.
@@ -57,8 +56,8 @@ export function PrivacyPage() {
         <Panel variant="soft">
           <h2 className="text-xl font-semibold text-ink">Quem controla os dados</h2>
           <p className="mt-3 text-sm leading-7 text-stone-600">
-            O Moldify atua como controlador dos dados tratados para operacao do app, autenticacao, publicacao de
-            templates, geracao de links publicos e gestao do pagamento necessario para liberar publicacao.
+            O Moldify controla os dados tratados para operacao do app, autenticacao, publicacao de templates,
+            geracao de links publicos e gestao do pagamento necessario para liberar a publicacao.
           </p>
           <p className="mt-3 text-sm leading-7 text-stone-600">
             Canal de contato para temas de privacidade:{" "}
@@ -141,13 +140,13 @@ export function PrivacyPage() {
         <h2 className="text-xl font-semibold text-ink">Direitos do titular</h2>
         <p className="mt-3 text-sm leading-7 text-stone-600">
           Nos termos da LGPD, voce pode solicitar confirmacao da existencia de tratamento, acesso, correcao,
-          anonimização quando cabivel, portabilidade, informacoes sobre compartilhamento, revisao de decisoes
+          anonimizacao quando cabivel, portabilidade, informacoes sobre compartilhamento, revisao de decisoes
           automatizadas quando aplicavel e eliminacao dos dados tratados em desconformidade ou quando houver base
           legal para isso.
         </p>
         <p className="mt-3 text-sm leading-7 text-stone-600">
           Para exercer esses direitos, utilize {getPrivacyContactLabel()}. Algumas solicitacoes podem depender da
-          confirmacao da sua identidade e da analise de obrigacoes legais ou tecnicas que impeçam exclusao imediata.
+          confirmacao da sua identidade e da analise de obrigacoes legais ou tecnicas que impecam exclusao imediata.
         </p>
       </Panel>
 

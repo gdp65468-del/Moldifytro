@@ -30,8 +30,8 @@ export function CookiesPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ember">Politica de cookies</p>
         <h1 className="mt-3 font-display text-4xl font-bold text-ink">Cookies e armazenamento local no Moldify</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-700 md:text-base">
-          Esta pagina explica como o Moldify usa cookies, armazenamento local e tecnologias equivalentes para
-          manter o login, proteger a sessao, operar o editor e suportar integracoes essenciais.
+          Esta pagina explica, de forma objetiva, como o Moldify usa cookies, armazenamento local e tecnologias
+          equivalentes para manter o login, proteger a sessao, operar o editor e suportar integracoes essenciais.
         </p>
         <div className="mt-5 rounded-[22px] border border-white/90 bg-white/82 px-4 py-4 text-sm text-stone-700">
           Versao em vigor desde {PRIVACY_EFFECTIVE_DATE}.

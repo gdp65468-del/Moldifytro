@@ -87,10 +87,9 @@ export function CheckoutPage() {
         <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.18em] text-ember">Checkout</p>
-            <h1 className="mt-1.5 font-display text-3xl font-bold text-ink sm:text-4xl">Pagamento de apoio</h1>
+            <h1 className="mt-1.5 font-display text-3xl font-bold text-ink sm:text-4xl">Libere seu link publico</h1>
             <p className="mt-2 max-w-xl text-sm leading-5 text-stone-600">
-              Esta tela existe como apoio. O fluxo principal continua na publicacao, mas voce ainda pode
-              acompanhar o status daqui.
+              Conclua o pagamento para publicar seu template e entregar uma pagina pronta para outras pessoas criarem a propria arte.
             </p>
           </div>
           <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink shadow-[0_14px_32px_-24px_rgba(22,19,18,0.25)]">
@@ -118,6 +117,10 @@ export function CheckoutPage() {
         <div>
           <h2 className="text-xl font-semibold text-ink">{flow.heading}</h2>
           <p className="mt-2 text-stone-600">{flow.body}</p>
+        </div>
+
+        <div className="rounded-[20px] border border-white/90 bg-white/84 px-4 py-3 text-sm leading-6 text-stone-600">
+          Depois da aprovacao, seu template fica pronto para publicar com link reutilizavel, visual ajustado e experiencia simples para quem abrir no celular.
         </div>
 
         {flow.kind === "approved" ? (

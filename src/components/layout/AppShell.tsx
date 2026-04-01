@@ -121,8 +121,11 @@ export function AppShell() {
 
       <footer className="border-t border-stone-200/70 bg-paper/70 px-4 py-6 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 text-sm text-stone-600 sm:flex-row sm:items-center sm:justify-between">
-          <div>Moldify. Criacao, publicacao e compartilhamento de artes em um unico fluxo.</div>
+          <div>Moldify. Artes prontas para campanha, evento e divulgacao com link publico e uso simples no celular.</div>
           <div className="flex flex-wrap gap-4">
+            <Link className="transition hover:text-ember" to="/termos">
+              Termos
+            </Link>
             <Link className="transition hover:text-ember" to="/privacidade">
               Privacidade
             </Link>

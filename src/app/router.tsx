@@ -19,6 +19,7 @@ import { PublishPage } from "@/pages/PublishPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { PlatformTemplatePublicPage } from "@/pages/PlatformTemplatePublicPage";
 import { TemplatePublicPage } from "@/pages/TemplatePublicPage";
+import { TermsPage } from "@/pages/TermsPage";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: "login", element: <LoginPage /> },
       { path: "signup", element: <SignupPage /> },
+      { path: "termos", element: <TermsPage /> },
       { path: "privacidade", element: <PrivacyPage /> },
       { path: "cookies", element: <CookiesPage /> },
       { path: "m/:platformTemplateId", element: <PlatformTemplatePublicPage /> },
