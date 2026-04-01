@@ -308,6 +308,8 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [activeDock, setActiveDock] = useState<EditorDock>(templateMode === "overlay_logo" ? "overlay" : "photo");
     const [showCanvasHints, setShowCanvasHints] = useState(true);
     const [isPinching, setIsPinching] = useState(false);
+    const [isPreparingDownload, setIsPreparingDownload] = useState(false);
+    const [downloadNoticeOpen, setDownloadNoticeOpen] = useState(false);
     const [stageSize, setStageSize] = useState<StageSize>({
       width: MAX_PREVIEW_WIDTH,
       height: MAX_PREVIEW_WIDTH * 1.5,
@@ -837,11 +839,21 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       document.body.removeChild(link);
     }
 
-    function handleDownload() {
+    async function handleDownload() {
+      if (isPreparingDownload) {
+        return;
+      }
+
       setActionMessage(null);
+      setDownloadNoticeOpen(true);
+      setIsPreparingDownload(true);
+
+      await new Promise((resolve) => window.setTimeout(resolve, 120));
 
       const dataUrl = getExportDataUrl();
       if (!dataUrl) {
+        setDownloadNoticeOpen(false);
+        setIsPreparingDownload(false);
         setActionMessage("Nao foi possivel gerar a imagem final. Tente usar outra moldura ou recarregar a pagina.");
         return;
       }
@@ -850,7 +862,13 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         downloadFromDataUrl(dataUrl);
         onDownload?.(dataUrl);
         setActiveDock("photo");
+        window.setTimeout(() => {
+          setDownloadNoticeOpen(false);
+          setIsPreparingDownload(false);
+        }, 1200);
       } catch {
+        setDownloadNoticeOpen(false);
+        setIsPreparingDownload(false);
         setActionMessage("Nao foi possivel iniciar o download neste navegador.");
       }
     }
@@ -1439,8 +1457,8 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button type="button" className="text-xs sm:text-sm" onClick={handleDownload}>
-                Baixar imagem
+              <Button type="button" className="text-xs sm:text-sm" onClick={() => void handleDownload()} disabled={isPreparingDownload}>
+                {isPreparingDownload ? "Preparando..." : "Baixar imagem"}
               </Button>
               {canShare ? (
                 <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={() => void handleShare()}>
@@ -1459,6 +1477,24 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         </div>
 
         {actionMessage ? <div className="text-sm text-red-700">{actionMessage}</div> : null}
+
+        {downloadNoticeOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/35 px-4 py-8 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-[28px] border border-white/80 bg-[linear-gradient(160deg,rgba(255,249,241,0.98),rgba(255,255,255,0.96))] p-6 shadow-[0_36px_110px_-48px_rgba(17,24,39,0.55)]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f7ebdd] text-sm font-semibold uppercase tracking-[0.18em] text-ember">
+                  OK
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-display text-2xl font-bold text-ink">Preparando download</h2>
+                  <p className="mt-3 text-sm leading-7 text-stone-600">
+                    Em breve sua imagem vai ser baixada. Aguarde um instante para nao tocar varias vezes no botao.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </Panel>
     );
   },
