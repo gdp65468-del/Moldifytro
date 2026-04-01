@@ -292,8 +292,8 @@ export function EditorPage() {
           <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-stone-200 bg-white/70 px-4 py-3 text-sm text-stone-600">
             <div className="max-w-3xl text-xs leading-5 sm:text-sm sm:leading-6">
               {mode === "overlay_logo"
-                ? "A foto fica livre. Destrave a moldura apenas quando quiser ajustar a camada de cima."
-                : "A moldura fica fixa por cima da foto. Aqui voce so ajusta a imagem e segue para publicar."}
+                ? "A foto fica livre. Destrave a moldura apenas quando quiser ajustar a camada de cima e use o texto como acabamento."
+                : "A moldura fica fixa por cima da foto. Ajuste a imagem, adicione texto e siga para publicar."}
             </div>
             <div className="rounded-full bg-stone-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
               Editor rapido
@@ -312,8 +312,8 @@ export function EditorPage() {
             usePlatformPreset={Boolean(selectedPlatform)}
             helperText={
               mode === "overlay_logo"
-                ? "No celular, arraste a foto e destrave a camada de cima so quando quiser alinhar."
-                : "No celular, arraste a foto com um dedo e use o zoom quando precisar."
+                ? "No celular, arraste a foto, ajuste o texto e destrave a camada de cima so quando quiser alinhar."
+                : "No celular, arraste a foto, escreva no texto e use o zoom quando precisar."
             }
           />
         </div>

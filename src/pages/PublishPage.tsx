@@ -11,7 +11,7 @@ import {
   getPaymentFlowState,
 } from "@/lib/payment-flow";
 import { createCheckout, getLatestPayment } from "@/services/payments";
-import { getUserTemplate, publishTemplate } from "@/services/templates";
+import { getUserTemplate, publishTemplate, saveTemplateDraft } from "@/services/templates";
 
 export function PublishPage() {
   const { templateId } = useParams();
@@ -21,6 +21,7 @@ export function PublishPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [message, setMessage] = useState<string>();
   const [messageTone, setMessageTone] = useState<"info" | "success" | "error">("info");
+  const [publicTextEditable, setPublicTextEditable] = useState(false);
 
   const { data: template } = useQuery({
     queryKey: ["template", templateId],
@@ -66,6 +67,41 @@ export function PublishPage() {
     },
   });
 
+  const textPreferenceMutation = useMutation({
+    mutationFn: async (nextValue: boolean) => {
+      if (!user || !template) {
+        throw new Error("Nao foi possivel salvar a preferencia de texto.");
+      }
+
+      return saveTemplateDraft({
+        id: template.id,
+        ownerId: user.id,
+        title: template.title,
+        templateMode: template.templateMode,
+        frameUrl: template.frameUrl,
+        frameStoragePath: template.frameStoragePath,
+        thumbnailUrl: template.thumbnailUrl,
+        source: template.source,
+        platformTemplateId: template.platformTemplateId,
+        overlayConfig: {
+          ...(template.overlayConfig ?? {}),
+          publicTextEditable: nextValue,
+        },
+      });
+    },
+    onSuccess: async (_nextTemplate, nextValue) => {
+      setMessageTone("success");
+      setMessage(nextValue ? "O texto podera ser editado no link publico." : "O texto ficara fixo no link publico.");
+      await queryClient.invalidateQueries({ queryKey: ["template", templateId] });
+      await queryClient.invalidateQueries({ queryKey: ["public-template", template?.shareSlug] });
+    },
+    onError: (error) => {
+      setPublicTextEditable(template?.overlayConfig?.publicTextEditable ?? false);
+      setMessageTone("error");
+      setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar a preferencia do texto.");
+    },
+  });
+
   const shareUrl = useMemo(() => {
     if (!template?.shareSlug) {
       return "";
@@ -93,6 +129,10 @@ export function PublishPage() {
       },
     }).then(setQrCodeUrl);
   }, [shareUrl]);
+
+  useEffect(() => {
+    setPublicTextEditable(template?.overlayConfig?.publicTextEditable ?? false);
+  }, [template?.overlayConfig?.publicTextEditable]);
 
   if (!template) {
     return <Panel>Template nao encontrado.</Panel>;
@@ -264,6 +304,28 @@ export function PublishPage() {
               </Button>
             </div>
 
+            <div className="rounded-[22px] border border-stone-200 bg-white/84 px-4 py-4">
+              <label className="flex cursor-pointer items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-ink">Permitir edicao do texto no link publico</div>
+                  <div className="mt-1 text-sm leading-6 text-stone-600">
+                    Quando ligado, quem abrir o link pode trocar, mover e estilizar o texto antes de baixar.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  className="mt-1 h-5 w-5 accent-orange-600"
+                  checked={publicTextEditable}
+                  disabled={textPreferenceMutation.isPending}
+                  onChange={(event) => {
+                    const nextValue = event.target.checked;
+                    setPublicTextEditable(nextValue);
+                    void textPreferenceMutation.mutateAsync(nextValue);
+                  }}
+                />
+              </label>
+            </div>
+
             <div className="grid gap-6 rounded-[28px] border border-white/90 bg-white/84 p-5 md:grid-cols-[220px_1fr]">
               <div className="mx-auto w-full max-w-[220px] rounded-[24px] bg-paper p-3 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.16)]">
                 {qrCodeUrl ? (
@@ -290,15 +352,38 @@ export function PublishPage() {
               <h2 className="text-xl font-semibold text-ink">{flow.heading}</h2>
               <p className="text-stone-600">{flow.body}</p>
             </div>
+            <div className="rounded-[22px] border border-stone-200 bg-white/84 px-4 py-4">
+              <label className="flex cursor-pointer items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-ink">Permitir edicao do texto no link publico</div>
+                  <div className="mt-1 text-sm leading-6 text-stone-600">
+                    Quando ligado, quem abrir o link pode trocar, mover e estilizar o texto antes de baixar.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  className="mt-1 h-5 w-5 accent-orange-600"
+                  checked={publicTextEditable}
+                  disabled={textPreferenceMutation.isPending}
+                  onChange={(event) => {
+                    const nextValue = event.target.checked;
+                    setPublicTextEditable(nextValue);
+                    void textPreferenceMutation.mutateAsync(nextValue);
+                  }}
+                />
+              </label>
+            </div>
             {flow.primaryLabel ? (
               <Button
                 onClick={handlePrimaryAction}
-                disabled={checkoutMutation.isPending || publishMutation.isPending}
+                disabled={checkoutMutation.isPending || publishMutation.isPending || textPreferenceMutation.isPending}
               >
                 {checkoutMutation.isPending && flow.primaryAction !== "publish_template"
                   ? "Preparando pagamento..."
                   : publishMutation.isPending && flow.primaryAction === "publish_template"
                     ? "Publicando..."
+                    : textPreferenceMutation.isPending
+                      ? "Salvando preferencia..."
                     : flow.primaryLabel}
               </Button>
             ) : null}

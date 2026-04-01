@@ -144,7 +144,7 @@ export function PlatformTemplatePublicPage() {
                   Ajuste e baixe
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 md:text-base">
-                  Arraste a foto, ajuste o enquadramento e baixe a arte final pronta para divulgar.
+                  Arraste a foto, escreva no texto se quiser e baixe a arte final pronta para divulgar.
                 </p>
               </div>
 
@@ -160,7 +160,8 @@ export function PlatformTemplatePublicPage() {
               frameSrc={template.imageUrl}
               photoSrc={photoSrc}
               usePlatformPreset
-              helperText="Toque e arraste a foto. Use dois dedos ou o controle de zoom para aproximar."
+              textEditable
+              helperText="Toque e arraste a foto. Toque no texto para editar e use o zoom quando precisar."
             />
           </div>
         </Panel>

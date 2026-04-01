@@ -1,19 +1,20 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from "react";
 import Konva from "konva";
-import { Image as KonvaImage, Layer, Rect, Stage } from "react-konva";
+import { Image as KonvaImage, Layer, Rect, Stage, Text as KonvaText } from "react-konva";
 import { ExportButton } from "@/components/editor/ExportButton";
 import { ZoomControls } from "@/components/editor/ZoomControls";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
 import { loadImage } from "@/lib/image";
-import type { OverlayConfig, TemplateMode } from "@/types/template";
+import type { OverlayConfig, TemplateMode, TextAlign, TextOverlayConfig } from "@/types/template";
 
 const EXPORT_WIDTH = 1024;
 const EXPORT_HEIGHT = 1536;
@@ -34,7 +35,21 @@ interface OverlayState {
   scale: number;
 }
 
-type ActiveLayer = "photo" | "overlay";
+interface TextState {
+  text: string;
+  x: number;
+  y: number;
+  widthRatio: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  rotation: number;
+  align: TextAlign;
+  shadowEnabled: boolean;
+  strokeEnabled: boolean;
+}
+
+type ActiveLayer = "photo" | "overlay" | "text";
 
 interface Point {
   x: number;
@@ -55,6 +70,7 @@ interface CanvasEditorProps {
   photoSrc?: string;
   initialOverlayConfig?: OverlayConfig;
   overlayEditable?: boolean;
+  textEditable?: boolean;
   usePlatformPreset?: boolean;
   helperText?: string;
   onDownload?: (dataUrl: string) => void;
@@ -64,6 +80,31 @@ interface StageSize {
   width: number;
   height: number;
 }
+
+const TEXT_FONT_OPTIONS = [
+  { value: "Playfair Display", label: "Playfair" },
+  { value: "Cormorant Garamond", label: "Cormorant" },
+  { value: "Montserrat", label: "Montserrat" },
+  { value: "Oswald", label: "Oswald" },
+  { value: "Sora", label: "Sora" },
+  { value: "Parisienne", label: "Parisienne" },
+] as const;
+
+const TEXT_COLOR_OPTIONS = ["#FFF8F1", "#FFFFFF", "#1F2937", "#B45309", "#9F1239", "#14532D"] as const;
+
+const DEFAULT_TEXT_STATE: TextState = {
+  text: "",
+  x: 0.15,
+  y: 0.14,
+  widthRatio: 0.7,
+  fontSize: 74,
+  fontFamily: TEXT_FONT_OPTIONS[0].value,
+  color: TEXT_COLOR_OPTIONS[0],
+  rotation: 0,
+  align: "center",
+  shadowEnabled: true,
+  strokeEnabled: false,
+};
 
 function fitImage(
   image: HTMLImageElement,
@@ -174,13 +215,13 @@ function overlayConfigToState(
   stageSize: StageSize,
   config?: OverlayConfig,
 ): OverlayState {
-  if (config) {
-    const preferredWidth = config.widthRatio * stageSize.width;
+  if (config?.overlay) {
+    const preferredWidth = config.overlay.widthRatio * stageSize.width;
     return clampOverlay(
       {
-        x: config.x * stageSize.width,
-        y: config.y * stageSize.height,
-        scale: preferredWidth / image.width || config.scale || 1,
+        x: config.overlay.x * stageSize.width,
+        y: config.overlay.y * stageSize.height,
+        scale: preferredWidth / image.width || config.overlay.scale || 1,
       },
       image,
       stageSize,
@@ -199,6 +240,35 @@ function overlayConfigToState(
   );
 }
 
+function textConfigToState(config?: TextOverlayConfig): TextState {
+  if (!config) {
+    return { ...DEFAULT_TEXT_STATE };
+  }
+
+  return {
+    ...DEFAULT_TEXT_STATE,
+    ...config,
+  };
+}
+
+function clampText(
+  state: TextState,
+  stageSize: StageSize,
+): TextState {
+  const width = stageSize.width * state.widthRatio;
+  const lineCount = Math.max(1, state.text.split("\n").length);
+  const approximateHeight = state.fontSize * 1.15 * lineCount + 24;
+
+  return {
+    ...state,
+    widthRatio: Math.min(0.92, Math.max(0.28, state.widthRatio)),
+    fontSize: Math.min(180, Math.max(26, state.fontSize)),
+    x: Math.min(stageSize.width - width, Math.max(0, state.x)),
+    y: Math.min(stageSize.height - approximateHeight, Math.max(0, state.y)),
+    rotation: Math.min(45, Math.max(-45, state.rotation)),
+  };
+}
+
 export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
   (
     {
@@ -207,6 +277,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       photoSrc,
       initialOverlayConfig,
       overlayEditable = false,
+      textEditable = true,
       usePlatformPreset = false,
       helperText,
       onDownload,
@@ -215,6 +286,10 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
   ) => {
     const stageRef = useRef<Konva.Stage | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const stageSizeRef = useRef<StageSize>({
+      width: MAX_PREVIEW_WIDTH,
+      height: MAX_PREVIEW_WIDTH * 1.5,
+    });
     const pinchDistanceRef = useRef<number | null>(null);
     const pinchPhotoZoomRef = useRef<number>(1);
     const pinchOverlayScaleRef = useRef<number>(1);
@@ -224,6 +299,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
     const [photoState, setPhotoState] = useState<PhotoState | null>(null);
     const [overlayState, setOverlayState] = useState<OverlayState | null>(null);
+    const [textState, setTextState] = useState<TextState>(() => textConfigToState(initialOverlayConfig?.text));
     const [activeLayer, setActiveLayer] = useState<ActiveLayer>(
       templateMode === "overlay_logo" ? "overlay" : "photo",
     );
@@ -232,10 +308,16 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [showFineControls, setShowFineControls] = useState(false);
     const [canShare, setCanShare] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const [showTextControls, setShowTextControls] = useState(true);
     const [stageSize, setStageSize] = useState<StageSize>({
       width: MAX_PREVIEW_WIDTH,
       height: MAX_PREVIEW_WIDTH * 1.5,
     });
+    const textFieldId = useId();
+
+    useEffect(() => {
+      stageSizeRef.current = stageSize;
+    }, [stageSize]);
 
     useEffect(() => {
       setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
@@ -245,8 +327,27 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setPhotoLocked(false);
       setOverlayLocked(true);
       setShowFineControls(false);
+      setShowTextControls(true);
       setActiveLayer("photo");
     }, [templateMode]);
+
+    useEffect(() => {
+      setTextState(clampText(textConfigToState(initialOverlayConfig?.text), stageSizeRef.current));
+    }, [initialOverlayConfig?.text]);
+
+    useEffect(() => {
+      setTextState((current) => clampText(current, stageSize));
+    }, [stageSize]);
+
+    useEffect(() => {
+      if (typeof document === "undefined" || !textState.fontFamily || !("fonts" in document)) {
+        return;
+      }
+
+      void document.fonts.load(`600 ${Math.max(42, textState.fontSize)}px "${textState.fontFamily}"`).then(() => {
+        stageRef.current?.batchDraw();
+      });
+    }, [textState.fontFamily, textState.fontSize]);
 
     useEffect(() => {
       const container = containerRef.current;
@@ -341,30 +442,60 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         resetScene();
       },
       getOverlayConfig: () => {
-        if (templateMode !== "overlay_logo" || !frameImage || !overlayState) {
+        const overlay =
+          templateMode === "overlay_logo" && frameImage && overlayState
+            ? {
+                x: overlayState.x / stageSize.width,
+                y: overlayState.y / stageSize.height,
+                scale: overlayState.scale,
+                widthRatio: (frameImage.width * overlayState.scale) / stageSize.width,
+              }
+            : undefined;
+
+        const normalizedText = textState.text.trim()
+          ? {
+              text: textState.text,
+              x: textState.x / stageSize.width,
+              y: textState.y / stageSize.height,
+              widthRatio: textState.widthRatio,
+              fontSize: textState.fontSize,
+              fontFamily: textState.fontFamily,
+              color: textState.color,
+              rotation: textState.rotation,
+              align: textState.align,
+              shadowEnabled: textState.shadowEnabled,
+              strokeEnabled: textState.strokeEnabled,
+            }
+          : undefined;
+
+        if (!overlay && !normalizedText && !initialOverlayConfig?.publicTextEditable) {
           return undefined;
         }
 
         return {
-          x: overlayState.x / stageSize.width,
-          y: overlayState.y / stageSize.height,
-          scale: overlayState.scale,
-          widthRatio: (frameImage.width * overlayState.scale) / stageSize.width,
+          overlay,
+          text: normalizedText,
+          publicTextEditable: initialOverlayConfig?.publicTextEditable ?? false,
         };
       },
     }));
 
     const actualPhotoScale = photoState ? photoState.baseScale * photoState.zoom : 1;
+    const textWidth = stageSize.width * textState.widthRatio;
+    const hasText = Boolean(textState.text.trim());
     const isOverlayMode = templateMode === "overlay_logo";
     const isPhotoActive = activeLayer === "photo";
     const isOverlayActive = isOverlayMode && activeLayer === "overlay";
+    const isTextActive = activeLayer === "text";
     const activeLayerLocked = isOverlayActive ? overlayLocked : false;
     const topLayerLabel = isOverlayMode ? "Camada superior" : "Moldura";
-    const interactionHint = isOverlayMode
-      ? overlayLocked
-        ? "Arraste a foto. Destrave a moldura so quando quiser ajustar a camada de cima."
-        : "Mova a moldura, alinhe no canvas e trave de novo quando terminar."
-      : "Arraste a foto e use o zoom para encaixar do jeito que quiser.";
+    const interactionHint = isTextActive
+      ? "Arraste o texto para posicionar. Ajuste fonte, cor e tamanho logo abaixo."
+      : isOverlayMode
+        ? overlayLocked
+          ? "Arraste a foto. Destrave a moldura so quando quiser ajustar a camada de cima."
+          : "Mova a moldura, alinhe no canvas e trave de novo quando terminar."
+        : "Arraste a foto e use o zoom para encaixar do jeito que quiser.";
 
     function handlePhotoZoomChange(nextZoom: number) {
       if (!photoState || !photoImage || photoLocked) {
@@ -460,6 +591,27 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           stageSize,
         ),
       );
+    }
+
+    function handleTextDragPosition(x: number, y: number) {
+      if (!textEditable) {
+        return;
+      }
+
+      setTextState((current) =>
+        clampText(
+          {
+            ...current,
+            x,
+            y,
+          },
+          stageSize,
+        ),
+      );
+    }
+
+    function updateTextState(patch: Partial<TextState>) {
+      setTextState((current) => clampText({ ...current, ...patch }, stageSize));
     }
 
     function handleMove(direction: MoveDirection) {
@@ -603,6 +755,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setPhotoLocked(false);
       setOverlayLocked(true);
       setShowFineControls(false);
+      setShowTextControls(true);
       setActiveLayer("photo");
 
       if (photoImage) {
@@ -612,6 +765,8 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       if (frameImage && templateMode === "overlay_logo") {
         setOverlayState(overlayConfigToState(frameImage, stageSize, initialOverlayConfig));
       }
+
+      setTextState(clampText(textConfigToState(initialOverlayConfig?.text), stageSize));
     }
 
     function handlePhotoDragPosition(x: number, y: number) {
@@ -736,6 +891,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
                   {isOverlayMode ? topLayerLabel : "Foto livre"}
                 </span>
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                  {hasText ? (textEditable ? "Texto ativo" : "Texto fixo") : textEditable ? "Texto opcional" : "Sem texto"}
+                </span>
                 <span
                   className={`rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${
                     isOverlayMode && overlayLocked
@@ -787,10 +945,10 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             >
               <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
                 <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                  {isOverlayMode ? "Arraste a foto" : "Toque e arraste"}
+                  {isTextActive ? "Arraste o texto" : isOverlayMode ? "Arraste a foto" : "Toque e arraste"}
                 </div>
                 <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                  {isOverlayMode && overlayLocked ? "Moldura fixa" : "Canvas livre"}
+                  {isTextActive ? "Texto em foco" : isOverlayMode && overlayLocked ? "Moldura fixa" : "Canvas livre"}
                 </div>
               </div>
 
@@ -882,13 +1040,40 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     listening={false}
                   />
                 ) : null}
+
+                {hasText ? (
+                  <KonvaText
+                    text={textState.text}
+                    x={textState.x}
+                    y={textState.y}
+                    width={textWidth}
+                    fontSize={textState.fontSize}
+                    fontFamily={textState.fontFamily}
+                    fill={textState.color}
+                    align={textState.align}
+                    rotation={textState.rotation}
+                    lineHeight={1.05}
+                    fontStyle={textState.strokeEnabled ? "bold" : "normal"}
+                    stroke={textState.strokeEnabled ? "rgba(255,248,241,0.94)" : undefined}
+                    strokeWidth={textState.strokeEnabled ? Math.max(2, textState.fontSize * 0.06) : 0}
+                    shadowColor={textState.shadowEnabled ? "rgba(22,19,18,0.4)" : undefined}
+                    shadowBlur={textState.shadowEnabled ? 12 : 0}
+                    shadowOffsetY={textState.shadowEnabled ? 3 : 0}
+                    draggable={textEditable}
+                    listening={textEditable}
+                    onMouseDown={() => setActiveLayer("text")}
+                    onTouchStart={() => setActiveLayer("text")}
+                    onDragMove={(event) => handleTextDragPosition(event.target.x(), event.target.y())}
+                    onDragEnd={(event) => handleTextDragPosition(event.target.x(), event.target.y())}
+                  />
+                ) : null}
               </Layer>
             </Stage>
           </div>
         </div>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(280px,1.1fr)] xl:items-start">
           <ZoomControls
             photoZoom={photoState?.zoom ?? 1}
             onPhotoZoomChange={handlePhotoZoomChange}
@@ -898,24 +1083,199 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             logoLocked={isOverlayMode ? overlayLocked : undefined}
           />
 
-          <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:min-w-[220px] sm:p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-                  Ajustes finos
-                </div>
-                <div className="mt-1 text-xs leading-5 text-stone-600">
-                  {activeLayerLocked
-                    ? "Destrave a camada ativa para usar os botoes."
-                    : isOverlayActive
-                      ? "Pequenos ajustes na moldura."
-                      : "Pequenos ajustes na foto."}
+          {textEditable ? (
+            <div className="grid gap-3">
+              <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                      Texto sobreposto
+                    </div>
+                    <div className="mt-1 text-xs leading-5 text-stone-600">
+                      Escreva, arraste e ajuste. O texto entra na imagem final.
+                    </div>
+                  </div>
+                  <Button variant="ghost" onClick={() => setShowTextControls((current) => !current)}>
+                    {showTextControls ? "Ocultar" : "Mostrar"}
+                  </Button>
                 </div>
               </div>
-              <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
-                {showFineControls ? "Ocultar" : "Mostrar"}
-              </Button>
+
+              {showTextControls ? (
+                <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+                  <label className="block">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                      Texto
+                    </span>
+                    <textarea
+                      id={textFieldId}
+                      rows={2}
+                      value={textState.text}
+                      onFocus={() => setActiveLayer("text")}
+                      onChange={(event) => {
+                        setActiveLayer("text");
+                        updateTextState({ text: event.target.value });
+                      }}
+                      placeholder="Digite seu texto aqui"
+                      className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
+                    />
+                  </label>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                        Fonte
+                      </span>
+                      <select
+                        value={textState.fontFamily}
+                        onChange={(event) => {
+                          setActiveLayer("text");
+                          updateTextState({ fontFamily: event.target.value });
+                        }}
+                        className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
+                      >
+                        {TEXT_FONT_OPTIONS.map((font) => (
+                          <option key={font.value} value={font.value}>
+                            {font.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                        Alinhamento
+                      </span>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(["left", "center", "right"] as const).map((align) => (
+                          <Button
+                            key={align}
+                            type="button"
+                            variant={textState.align === align ? "primary" : "secondary"}
+                            className="px-4 py-2 text-xs"
+                            onClick={() => {
+                              setActiveLayer("text");
+                              updateTextState({ align });
+                            }}
+                          >
+                            {align === "left" ? "Esquerda" : align === "center" ? "Centro" : "Direita"}
+                          </Button>
+                        ))}
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-sm font-medium text-stone-700">
+                      <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                        <span>Tamanho</span>
+                        <span>{Math.round(textState.fontSize)} px</span>
+                      </span>
+                      <input
+                        className="mt-2 w-full accent-orange-600"
+                        type="range"
+                        min="26"
+                        max="180"
+                        step="1"
+                        value={textState.fontSize}
+                        onChange={(event) => {
+                          setActiveLayer("text");
+                          updateTextState({ fontSize: Number(event.target.value) });
+                        }}
+                      />
+                    </label>
+
+                    <label className="block text-sm font-medium text-stone-700">
+                      <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                        <span>Rotacao</span>
+                        <span>{Math.round(textState.rotation)}º</span>
+                      </span>
+                      <input
+                        className="mt-2 w-full accent-emerald-700"
+                        type="range"
+                        min="-45"
+                        max="45"
+                        step="1"
+                        value={textState.rotation}
+                        onChange={(event) => {
+                          setActiveLayer("text");
+                          updateTextState({ rotation: Number(event.target.value) });
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Cor</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {TEXT_COLOR_OPTIONS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          aria-label={`Selecionar cor ${color}`}
+                          title={color}
+                          onClick={() => {
+                            setActiveLayer("text");
+                            updateTextState({ color });
+                          }}
+                          className={`h-10 w-10 rounded-full border-2 transition ${
+                            textState.color === color ? "border-ink scale-105" : "border-white"
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={textState.shadowEnabled ? "primary" : "secondary"}
+                      className="px-4 py-2 text-xs"
+                      onClick={() => {
+                        setActiveLayer("text");
+                        updateTextState({ shadowEnabled: !textState.shadowEnabled });
+                      }}
+                    >
+                      {textState.shadowEnabled ? "Sombra ligada" : "Ligar sombra"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={textState.strokeEnabled ? "primary" : "secondary"}
+                      className="px-4 py-2 text-xs"
+                      onClick={() => {
+                        setActiveLayer("text");
+                        updateTextState({ strokeEnabled: !textState.strokeEnabled });
+                      }}
+                    >
+                      {textState.strokeEnabled ? "Contorno ligado" : "Ligar contorno"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                Ajustes finos
+              </div>
+              <div className="mt-1 text-xs leading-5 text-stone-600">
+                {activeLayerLocked
+                  ? "Destrave a camada ativa para usar os botoes."
+                  : isOverlayActive
+                    ? "Pequenos ajustes na moldura."
+                    : isTextActive
+                      ? "Se precisar, volte ao texto e ajuste pelo painel."
+                      : "Pequenos ajustes na foto."}
+              </div>
+            </div>
+            <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
+              {showFineControls ? "Ocultar" : "Mostrar"}
+            </Button>
           </div>
         </div>
 

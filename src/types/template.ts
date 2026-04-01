@@ -1,11 +1,33 @@
 export type TemplateMode = "full_frame" | "overlay_logo";
 export type TemplateStatus = "draft" | "pending_payment" | "published";
 
-export interface OverlayConfig {
+export type TextAlign = "left" | "center" | "right";
+
+export interface OverlayLayerConfig {
   x: number;
   y: number;
   scale: number;
   widthRatio: number;
+}
+
+export interface TextOverlayConfig {
+  text: string;
+  x: number;
+  y: number;
+  widthRatio: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  rotation: number;
+  align: TextAlign;
+  shadowEnabled: boolean;
+  strokeEnabled: boolean;
+}
+
+export interface OverlayConfig {
+  overlay?: OverlayLayerConfig;
+  text?: TextOverlayConfig;
+  publicTextEditable?: boolean;
 }
 
 export interface PlatformTemplate {

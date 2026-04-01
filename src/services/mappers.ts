@@ -1,5 +1,11 @@
 import type { PaymentRecord } from "@/types/payment";
-import type { OverlayConfig, PlatformTemplate, UserTemplate } from "@/types/template";
+import type {
+  OverlayConfig,
+  OverlayLayerConfig,
+  PlatformTemplate,
+  TextOverlayConfig,
+  UserTemplate,
+} from "@/types/template";
 import type { UserProfile } from "@/types/user";
 
 type Nullable<T> = T | null | undefined;
@@ -10,16 +16,76 @@ function toOverlayConfig(value: unknown): OverlayConfig | undefined {
   }
 
   const payload = value as Record<string, unknown>;
-  const x = Number(payload.x);
-  const y = Number(payload.y);
-  const scale = Number(payload.scale);
-  const widthRatio = Number(payload.widthRatio);
+  const toNumber = (input: unknown) => Number(input);
 
-  if ([x, y, scale, widthRatio].some((item) => Number.isNaN(item))) {
+  const toOverlayLayer = (input: unknown): OverlayLayerConfig | undefined => {
+    if (!input || typeof input !== "object") {
+      return undefined;
+    }
+
+    const layer = input as Record<string, unknown>;
+    const x = toNumber(layer.x);
+    const y = toNumber(layer.y);
+    const scale = toNumber(layer.scale);
+    const widthRatio = toNumber(layer.widthRatio);
+
+    if ([x, y, scale, widthRatio].some((item) => Number.isNaN(item))) {
+      return undefined;
+    }
+
+    return { x, y, scale, widthRatio };
+  };
+
+  const toTextLayer = (input: unknown): TextOverlayConfig | undefined => {
+    if (!input || typeof input !== "object") {
+      return undefined;
+    }
+
+    const layer = input as Record<string, unknown>;
+    const x = toNumber(layer.x);
+    const y = toNumber(layer.y);
+    const widthRatio = toNumber(layer.widthRatio);
+    const fontSize = toNumber(layer.fontSize);
+    const rotation = toNumber(layer.rotation);
+
+    if ([x, y, widthRatio, fontSize, rotation].some((item) => Number.isNaN(item))) {
+      return undefined;
+    }
+
+    const align = String(layer.align ?? "center");
+    if (!["left", "center", "right"].includes(align)) {
+      return undefined;
+    }
+
+    return {
+      text: String(layer.text ?? ""),
+      x,
+      y,
+      widthRatio,
+      fontSize,
+      fontFamily: String(layer.fontFamily ?? "Montserrat"),
+      color: String(layer.color ?? "#1f2937"),
+      rotation,
+      align: align as TextOverlayConfig["align"],
+      shadowEnabled: Boolean(layer.shadowEnabled ?? false),
+      strokeEnabled: Boolean(layer.strokeEnabled ?? false),
+    };
+  };
+
+  const legacyOverlay = toOverlayLayer(payload);
+  if (legacyOverlay && !("overlay" in payload) && !("text" in payload) && !("publicTextEditable" in payload)) {
+    return { overlay: legacyOverlay, publicTextEditable: false };
+  }
+
+  const overlay = toOverlayLayer(payload.overlay);
+  const text = toTextLayer(payload.text);
+  const publicTextEditable = Boolean(payload.publicTextEditable ?? false);
+
+  if (!overlay && !text && !publicTextEditable) {
     return undefined;
   }
 
-  return { x, y, scale, widthRatio };
+  return { overlay, text, publicTextEditable };
 }
 
 export function mapUserProfileRow(row: Record<string, unknown>): UserProfile {

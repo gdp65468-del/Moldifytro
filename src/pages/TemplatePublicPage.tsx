@@ -51,8 +51,8 @@ export function TemplatePublicPage() {
       : "Envie sua foto, encaixe no quadro e baixe sua lembranca pronta em poucos segundos.";
   const editorHelper =
     template.templateMode === "overlay_logo"
-      ? "Arraste a foto, ajuste o enquadramento e baixe. A identidade visual publicada ja entra fixa na arte."
-      : "Arraste a foto, aproxime se quiser e baixe sua imagem final ja dentro da moldura.";
+      ? "Arraste a foto, ajuste o texto se estiver liberado e baixe. A identidade visual publicada ja entra fixa na arte."
+      : "Arraste a foto, escreva no texto se estiver liberado e baixe sua imagem final ja dentro da moldura.";
 
   async function copyTextWithFallback(text: string) {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -209,10 +209,15 @@ export function TemplatePublicPage() {
               photoSrc={photoSrc}
               initialOverlayConfig={template.overlayConfig}
               overlayEditable={false}
+              textEditable={template.overlayConfig?.publicTextEditable ?? false}
               helperText={
                 template.templateMode === "overlay_logo"
-                  ? "Arraste a foto livremente. A identidade visual publicada ja fica fixa do jeito que foi configurada."
-                  : "Toque e arraste a foto. Use dois dedos ou o controle de zoom para aproximar."
+                  ? template.overlayConfig?.publicTextEditable
+                    ? "Arraste a foto, toque no texto para editar e baixe quando ficar do seu jeito."
+                    : "Arraste a foto livremente. O texto e a identidade visual publicados ja ficam fixos do jeito que foram configurados."
+                  : template.overlayConfig?.publicTextEditable
+                    ? "Toque e arraste a foto. Toque no texto para editar e use o zoom quando precisar."
+                    : "Toque e arraste a foto. Use dois dedos ou o controle de zoom para aproximar."
               }
               onDownload={() => {
                 void trackTemplateUse(template.id, "anonymous", "download");
