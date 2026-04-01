@@ -359,6 +359,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const isPhotoActive = activeLayer === "photo";
     const isOverlayActive = isOverlayMode && activeLayer === "overlay";
     const activeLayerLocked = isOverlayActive ? overlayLocked : photoLocked;
+    const activeLayerLabel = isOverlayActive ? "Logo" : "Foto";
     const interactionHint = isOverlayActive
       ? overlayLocked
         ? "A logo esta travada. Toque no cadeado para destravar e mover."
@@ -736,7 +737,30 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     return (
       <Panel className="min-w-0 overflow-hidden space-y-5">
         <div className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2 sm:p-3">
-          <div ref={containerRef} className="editor-stage mx-auto w-full max-w-[420px] overflow-hidden">
+          <div
+            ref={containerRef}
+            className="editor-stage relative mx-auto w-full max-w-[420px] overflow-hidden"
+          >
+            <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
+              <div className="rounded-full border border-white/70 bg-white/88 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                {activeLayerLabel} em edicao
+              </div>
+              <div
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur ${
+                  activeLayerLocked
+                    ? "border border-amber-200 bg-amber-50/95 text-amber-700"
+                    : "border border-emerald-200 bg-emerald-50/95 text-emerald-700"
+                }`}
+              >
+                {activeLayerLocked ? "Cadeado ligado" : "Livre para mover"}
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/70 bg-white/82 px-3 py-2 text-xs text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+              {activeLayerLocked
+                ? `Toque em "Destravar ${activeLayerLabel.toLowerCase()}" para mover com o dedo.`
+                : `Arraste a ${activeLayerLabel.toLowerCase()} livremente dentro da arte.`}
+            </div>
             <Stage
               ref={stageRef}
               width={stageSize.width}
