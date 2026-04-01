@@ -157,13 +157,13 @@ export function EditorPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm uppercase tracking-[0.18em] text-ember">
             {mode === "full_frame" ? "Moldura completa" : "Logo sobreposta"}
           </p>
-          <h1 className="font-display text-4xl font-bold text-ink">
+          <h1 className="font-display text-3xl font-bold leading-tight text-ink sm:text-4xl">
             {viewOnlyPlatform ? "Editor da moldura da plataforma" : "Editor de template"}
           </h1>
         </div>
@@ -188,8 +188,8 @@ export function EditorPage() {
         <Panel className={`p-4 text-sm ${topMessageClassName}`}>{message}</Panel>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[0.42fr_0.58fr]">
-        <div className="order-2 space-y-5 xl:order-1">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[0.42fr_0.58fr]">
+        <div className="order-2 min-w-0 space-y-5 xl:order-1">
           <Panel>
             <label className="block text-sm font-semibold text-ink">
               Titulo do template
@@ -298,7 +298,7 @@ export function EditorPage() {
           </Panel>
         </div>
 
-        <div className="order-1 xl:order-2">
+        <div className="order-1 min-w-0 xl:order-2">
           <CanvasEditor
             ref={editorRef}
             templateMode={mode}

@@ -4,11 +4,26 @@ import { Panel } from "@/components/ui/Panel";
 import { StatusPanel } from "@/components/ui/StatusPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlatformTemplates } from "@/hooks/usePlatformTemplates";
+import { buildAbsoluteUrl, copyTextWithFallback, getPlatformTemplatePublicPath } from "@/lib/share";
+import { useState } from "react";
 
 export function LandingPage() {
   const { user } = useAuth();
   const platformTemplatesQuery = usePlatformTemplates();
   const platformTemplates = platformTemplatesQuery.data ?? [];
+  const [copiedTemplateId, setCopiedTemplateId] = useState<string | null>(null);
+
+  async function handleSharePlatformTemplate(platformTemplateId: string) {
+    try {
+      await copyTextWithFallback(buildAbsoluteUrl(getPlatformTemplatePublicPath(platformTemplateId)));
+      setCopiedTemplateId(platformTemplateId);
+      window.setTimeout(() => {
+        setCopiedTemplateId((current) => (current === platformTemplateId ? null : current));
+      }, 1800);
+    } catch {
+      setCopiedTemplateId(null);
+    }
+  }
 
   return (
     <div className="space-y-8 pb-24 sm:space-y-10 md:pb-0">
@@ -68,11 +83,20 @@ export function LandingPage() {
                     Base visual pronta para montar seu template em poucos cliques.
                   </p>
                 </div>
-                <Link className="mt-auto inline-flex" to={`/editor/new/frame?platform=${template.id}`}>
-                  <Button variant="secondary" className="w-full px-3 py-2 text-xs">
-                    Usar moldura
+                <div className="mt-auto flex flex-col gap-2">
+                  <Link className="inline-flex" to={getPlatformTemplatePublicPath(template.id)}>
+                    <Button variant="secondary" className="w-full px-3 py-2 text-xs">
+                      Usar moldura
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full px-3 py-2 text-xs"
+                    onClick={() => void handleSharePlatformTemplate(template.id)}
+                  >
+                    {copiedTemplateId === template.id ? "Link copiado" : "Compartilhar link"}
                   </Button>
-                </Link>
+                </div>
               </Panel>
             ))}
           </div>

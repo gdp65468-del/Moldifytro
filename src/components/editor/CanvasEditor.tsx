@@ -667,9 +667,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     return (
-      <Panel className="space-y-5">
-        <div className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-3">
-          <div ref={containerRef} className="editor-stage mx-auto w-full max-w-[420px]">
+      <Panel className="min-w-0 overflow-hidden space-y-5">
+        <div className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2 sm:p-3">
+          <div ref={containerRef} className="editor-stage mx-auto w-full max-w-[420px] overflow-hidden">
             <Stage
               ref={stageRef}
               width={stageSize.width}
@@ -782,7 +782,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           </div>
         ) : null}
 
-        <div className="grid gap-4 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
+        <div className="grid min-w-0 gap-4 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-sm font-semibold text-ink">Controles por botao</div>
@@ -794,7 +794,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
             <Button
               variant="secondary"
               className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"

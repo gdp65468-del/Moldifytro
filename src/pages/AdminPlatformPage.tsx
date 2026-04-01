@@ -5,6 +5,7 @@ import { UploadField } from "@/components/editor/UploadField";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Panel } from "@/components/ui/Panel";
+import { buildAbsoluteUrl, copyTextWithFallback, getPlatformTemplatePublicPath } from "@/lib/share";
 import {
   createAdminPlatformTemplate,
   deleteAdminPlatformTemplate,
@@ -28,6 +29,7 @@ export function AdminPlatformPage() {
   const [newCategory, setNewCategory] = useState("");
   const [newImageDataUrl, setNewImageDataUrl] = useState<string>("");
   const [newMessage, setNewMessage] = useState<string>("");
+  const [copiedTemplateId, setCopiedTemplateId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<{
     title: string;
     description: string;
@@ -105,6 +107,19 @@ export function AdminPlatformPage() {
       setNewMessage(error instanceof Error ? error.message : "Nao foi possivel excluir a moldura.");
     },
   });
+
+  async function handleSharePlatformTemplate(platformTemplateId: string) {
+    try {
+      await copyTextWithFallback(buildAbsoluteUrl(getPlatformTemplatePublicPath(platformTemplateId)));
+      setCopiedTemplateId(platformTemplateId);
+      setNewMessage("Link publico copiado com sucesso.");
+      window.setTimeout(() => {
+        setCopiedTemplateId((current) => (current === platformTemplateId ? null : current));
+      }, 1800);
+    } catch {
+      setNewMessage("Nao foi possivel copiar o link publico desta moldura.");
+    }
+  }
 
   return (
     <div className="space-y-6 pb-24 md:pb-0">
@@ -280,6 +295,12 @@ export function AdminPlatformPage() {
                       }
                     >
                       {template.isActive ? "Desativar" : "Ativar"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => void handleSharePlatformTemplate(template.id)}
+                    >
+                      {copiedTemplateId === template.id ? "Link copiado" : "Compartilhar"}
                     </Button>
                     <Button
                       variant="ghost"

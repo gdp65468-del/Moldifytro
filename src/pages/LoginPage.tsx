@@ -24,7 +24,7 @@ export function LoginPage() {
       <Panel className="text-center">
         <h1 className="font-display text-2xl font-bold text-ink sm:text-4xl">Entrar no Moldify</h1>
         <p className="mt-3 text-sm leading-6 text-stone-600 sm:text-base">
-          Faca login para salvar rascunhos, publicar templates e liberar o link compartilhavel.
+          Acesse sua conta para continuar suas criacoes, publicar links e acompanhar seus templates.
         </p>
 
         <Button
@@ -93,13 +93,13 @@ export function LoginPage() {
         ) : null}
 
         <p className="mt-4 text-sm text-stone-500">
-          O login usa Supabase Auth com Google ou e-mail e senha.
+          Entre com Google ou use seu e-mail e senha.
         </p>
 
         <p className="mt-2 text-sm text-stone-500">
-          Ainda nao tem conta?{" "}
+          Ainda nao tem uma conta?{" "}
           <Link to="/signup" className="font-semibold text-ember">
-            Criar conta
+            Criar minha conta
           </Link>
         </p>
       </Panel>

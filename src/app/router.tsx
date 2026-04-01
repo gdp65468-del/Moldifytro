@@ -17,6 +17,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
 import { PublishPage } from "@/pages/PublishPage";
 import { SignupPage } from "@/pages/SignupPage";
+import { PlatformTemplatePublicPage } from "@/pages/PlatformTemplatePublicPage";
 import { TemplatePublicPage } from "@/pages/TemplatePublicPage";
 
 export const router = createBrowserRouter([
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "signup", element: <SignupPage /> },
       { path: "privacidade", element: <PrivacyPage /> },
       { path: "cookies", element: <CookiesPage /> },
+      { path: "m/:platformTemplateId", element: <PlatformTemplatePublicPage /> },
       { path: "t/:slug", element: <TemplatePublicPage /> },
       {
         element: <RequireAuth />,

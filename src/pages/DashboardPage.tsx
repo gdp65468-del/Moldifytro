@@ -9,6 +9,7 @@ import { usePlatformTemplates } from "@/hooks/usePlatformTemplates";
 import { useUserTemplates } from "@/hooks/useUserTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { formatTemplateStatusLabel } from "@/lib/payment-flow";
+import { buildAbsoluteUrl, copyTextWithFallback, getPlatformTemplatePublicPath } from "@/lib/share";
 import {
   deleteTemplatePermanently,
   emptyTemplateTrash,
@@ -74,6 +75,19 @@ export function DashboardPage() {
     tone?: "default" | "danger";
     action: () => void;
   } | null>(null);
+  const [copiedPlatformId, setCopiedPlatformId] = useState<string | null>(null);
+
+  async function handleSharePlatformTemplate(platformTemplateId: string) {
+    try {
+      await copyTextWithFallback(buildAbsoluteUrl(getPlatformTemplatePublicPath(platformTemplateId)));
+      setCopiedPlatformId(platformTemplateId);
+      window.setTimeout(() => {
+        setCopiedPlatformId((current) => (current === platformTemplateId ? null : current));
+      }, 1800);
+    } catch {
+      setCopiedPlatformId(null);
+    }
+  }
 
   const refreshTemplateLists = async () => {
     await Promise.all([
@@ -254,9 +268,17 @@ export function DashboardPage() {
                       {template.viewsCount} / {template.downloadsCount}
                     </span>
                   </div>
-                  <Link className="mt-5 inline-flex" to={`/editor/new/frame?platform=${template.id}`}>
-                    <Button variant="secondary">Usar moldura da plataforma</Button>
-                  </Link>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link className="inline-flex" to={getPlatformTemplatePublicPath(template.id)}>
+                      <Button variant="secondary">Usar moldura da plataforma</Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      onClick={() => void handleSharePlatformTemplate(template.id)}
+                    >
+                      {copiedPlatformId === template.id ? "Link copiado" : "Compartilhar link"}
+                    </Button>
+                  </div>
                 </div>
               </Panel>
             ))}

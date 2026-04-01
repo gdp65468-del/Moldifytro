@@ -138,6 +138,23 @@ export async function getPublicTemplateBySlug(slug: string): Promise<UserTemplat
   return data ? mapUserTemplateRow(data as Record<string, unknown>) : null;
 }
 
+export async function getPublicPlatformTemplateById(platformTemplateId: string): Promise<PlatformTemplate | null> {
+  assertSupabaseEnabled();
+
+  const { data, error } = await supabase
+    .from("platform_templates")
+    .select("*")
+    .eq("id", platformTemplateId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Nao foi possivel carregar a moldura publica.");
+  }
+
+  return data ? mapPlatformTemplateRow(data as Record<string, unknown>) : null;
+}
+
 export async function saveTemplateDraft(input: TemplateDraftInput): Promise<UserTemplate> {
   assertSupabaseEnabled();
 
