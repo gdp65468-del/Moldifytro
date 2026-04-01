@@ -210,6 +210,7 @@ export function TemplatePublicPage() {
               initialOverlayConfig={template.overlayConfig}
               overlayEditable={false}
               textEditable={template.overlayConfig?.publicTextEditable ?? false}
+              shareUrl={shareUrl}
               helperText={
                 template.templateMode === "overlay_logo"
                   ? template.overlayConfig?.publicTextEditable

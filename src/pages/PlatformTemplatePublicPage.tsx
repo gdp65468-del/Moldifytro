@@ -161,6 +161,7 @@ export function PlatformTemplatePublicPage() {
               photoSrc={photoSrc}
               usePlatformPreset
               textEditable
+              shareUrl={shareUrl}
               helperText="Toque e arraste a foto. Toque no texto para editar e use o zoom quando precisar."
             />
           </div>

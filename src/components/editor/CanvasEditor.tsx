@@ -73,6 +73,7 @@ interface CanvasEditorProps {
   textEditable?: boolean;
   usePlatformPreset?: boolean;
   helperText?: string;
+  shareUrl?: string;
   onDownload?: (dataUrl: string) => void;
 }
 
@@ -280,6 +281,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       textEditable = true,
       usePlatformPreset = false,
       helperText,
+      shareUrl,
       onDownload,
     },
     ref,
@@ -308,6 +310,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [canShare, setCanShare] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [activeDock, setActiveDock] = useState<EditorDock>(templateMode === "overlay_logo" ? "overlay" : "photo");
+    const [showCanvasHints, setShowCanvasHints] = useState(true);
     const [stageSize, setStageSize] = useState<StageSize>({
       width: MAX_PREVIEW_WIDTH,
       height: MAX_PREVIEW_WIDTH * 1.5,
@@ -327,6 +330,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setOverlayLocked(true);
       setActiveDock(templateMode === "overlay_logo" ? "overlay" : "photo");
       setActiveLayer("photo");
+      setShowCanvasHints(true);
     }, [templateMode]);
 
     useEffect(() => {
@@ -596,6 +600,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         return;
       }
 
+      setShowCanvasHints(false);
       setTextState((current) =>
         clampText(
           {
@@ -667,6 +672,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleStageTouchStart(event: Konva.KonvaEventObject<TouchEvent>) {
+      setShowCanvasHints(false);
       const touches = event.evt.touches;
       if (touches.length !== 2 || activeLayerLocked) {
         return;
@@ -679,7 +685,12 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       pinchOverlayStateRef.current = overlayState;
     }
 
+    function dismissCanvasHints() {
+      setShowCanvasHints(false);
+    }
+
     function handleStageTouchMove(event: Konva.KonvaEventObject<TouchEvent>) {
+      setShowCanvasHints(false);
       const touches = event.evt.touches;
       if (touches.length !== 2) {
         resetPinchTracking();
@@ -722,6 +733,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleStageWheel(event: Konva.KonvaEventObject<WheelEvent>) {
+      setShowCanvasHints(false);
       if (activeLayerLocked) {
         return;
       }
@@ -754,6 +766,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setOverlayLocked(true);
       setActiveDock(templateMode === "overlay_logo" ? "overlay" : "photo");
       setActiveLayer("photo");
+      setShowCanvasHints(true);
 
       if (photoImage) {
         setPhotoState(clampPhoto(fitImage(photoImage, photoTarget), photoImage, photoTarget));
@@ -771,6 +784,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         return;
       }
 
+      setShowCanvasHints(false);
       setPhotoState(
         clampPhoto(
           {
@@ -789,6 +803,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         return;
       }
 
+      setShowCanvasHints(false);
       setOverlayState(
         clampOverlay(
           {
@@ -806,6 +821,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       setOverlayLocked((current) => !current);
       setActiveLayer((current) => (current === "overlay" ? "photo" : "overlay"));
       setActiveDock("overlay");
+      setShowCanvasHints(false);
     }
 
     function getExportDataUrl() {
@@ -863,18 +879,20 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         const response = await fetch(dataUrl);
         const blob = await response.blob();
         const file = new File([blob], "moldify-export.png", { type: "image/png" });
+        const shareText = shareUrl
+          ? "Imagem criada no Moldify. Crie a sua tambem e use este link para montar a proxima."
+          : "Imagem criada no Moldify. Crie a sua tambem.";
+        const sharePayload = shareUrl
+          ? { title: "Moldify", text: shareText, url: shareUrl }
+          : { title: "Moldify", text: shareText };
 
         if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: "Moldify",
-            text: "Imagem criada no Moldify",
+            ...sharePayload,
             files: [file],
           });
         } else {
-          await navigator.share({
-            title: "Moldify",
-            text: "Imagem criada no Moldify",
-          });
+          await navigator.share(sharePayload);
         }
       } catch {
         handleDownload();
@@ -921,14 +939,16 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               ref={containerRef}
               className="editor-stage relative mx-auto w-full max-w-[420px] overflow-hidden"
             >
-              <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
-                <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                  {isTextActive ? "Arraste o texto" : isOverlayMode ? "Arraste a foto" : "Toque e arraste"}
+              {showCanvasHints ? (
+                <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
+                  <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                    {isTextActive ? "Arraste o texto" : isOverlayMode ? "Arraste a foto" : "Toque e arraste"}
+                  </div>
+                  <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                    {isTextActive ? "Texto em foco" : isOverlayMode && overlayLocked ? "Moldura fixa" : "Canvas livre"}
+                  </div>
                 </div>
-                <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                  {isTextActive ? "Texto em foco" : isOverlayMode && overlayLocked ? "Moldura fixa" : "Canvas livre"}
-                </div>
-              </div>
+              ) : null}
 
               <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-2">
                 <button
@@ -951,12 +971,14 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 </button>
               </div>
 
-              <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-4.75rem)] rounded-2xl border border-white/80 bg-white/84 px-3 py-2 text-[11px] font-semibold leading-5 text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                {helperText ??
-                  (isOverlayMode
-                    ? "A foto ja esta livre. Destrave a moldura so quando quiser alinhar a camada de cima."
-                    : "Arraste a foto e use o zoom para acertar o enquadramento.")}
-              </div>
+              {showCanvasHints ? (
+                <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-4.75rem)] rounded-2xl border border-white/80 bg-white/84 px-3 py-2 text-[11px] font-semibold leading-5 text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                  {helperText ??
+                    (isOverlayMode
+                      ? "A foto ja esta livre. Destrave a moldura so quando quiser alinhar a camada de cima."
+                      : "Arraste a foto e use o zoom para acertar o enquadramento.")}
+                </div>
+              ) : null}
             <Stage
               ref={stageRef}
               width={stageSize.width}
@@ -973,6 +995,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               onTouchEnd={handleStageTouchEnd}
               onTouchCancel={handleStageTouchEnd}
               onWheel={handleStageWheel}
+              onMouseDown={dismissCanvasHints}
             >
               <Layer>
                 <Rect width={stageSize.width} height={stageSize.height} fill="#fcfbf7" />
@@ -985,8 +1008,14 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     scaleY={actualPhotoScale}
                     draggable={!photoLocked && (!isOverlayMode || isPhotoActive)}
                     listening={!isOverlayMode || isPhotoActive}
-                    onMouseDown={() => setActiveLayer("photo")}
-                    onTouchStart={() => setActiveLayer("photo")}
+                    onMouseDown={() => {
+                      setActiveLayer("photo");
+                      dismissCanvasHints();
+                    }}
+                    onTouchStart={() => {
+                      setActiveLayer("photo");
+                      dismissCanvasHints();
+                    }}
                     onDragMove={(event) => handlePhotoDragPosition(event.target.x(), event.target.y())}
                     onDragEnd={(event) => handlePhotoDragPosition(event.target.x(), event.target.y())}
                   />
@@ -1001,8 +1030,14 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     scaleY={overlayState.scale}
                     draggable={overlayEditable && !overlayLocked && isOverlayActive}
                     listening={isOverlayActive}
-                    onMouseDown={() => setActiveLayer("overlay")}
-                    onTouchStart={() => setActiveLayer("overlay")}
+                    onMouseDown={() => {
+                      setActiveLayer("overlay");
+                      dismissCanvasHints();
+                    }}
+                    onTouchStart={() => {
+                      setActiveLayer("overlay");
+                      dismissCanvasHints();
+                    }}
                     onDragMove={(event) => handleOverlayDragPosition(event.target.x(), event.target.y())}
                     onDragEnd={(event) => handleOverlayDragPosition(event.target.x(), event.target.y())}
                   />
@@ -1039,8 +1074,14 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     shadowOffsetY={textState.shadowEnabled ? 3 : 0}
                     draggable={textEditable}
                     listening={textEditable}
-                    onMouseDown={() => setActiveLayer("text")}
-                    onTouchStart={() => setActiveLayer("text")}
+                    onMouseDown={() => {
+                      setActiveLayer("text");
+                      dismissCanvasHints();
+                    }}
+                    onTouchStart={() => {
+                      setActiveLayer("text");
+                      dismissCanvasHints();
+                    }}
                     onDragMove={(event) => handleTextDragPosition(event.target.x(), event.target.y())}
                     onDragEnd={(event) => handleTextDragPosition(event.target.x(), event.target.y())}
                   />
