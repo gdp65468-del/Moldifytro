@@ -9,7 +9,6 @@ import {
 } from "react";
 import Konva from "konva";
 import { Image as KonvaImage, Layer, Rect, Stage, Text as KonvaText } from "react-konva";
-import { ExportButton } from "@/components/editor/ExportButton";
 import { ZoomControls } from "@/components/editor/ZoomControls";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
@@ -50,6 +49,7 @@ interface TextState {
 }
 
 type ActiveLayer = "photo" | "overlay" | "text";
+type EditorDock = "photo" | "text" | "overlay" | "adjust";
 
 interface Point {
   x: number;
@@ -305,10 +305,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     );
     const [photoLocked, setPhotoLocked] = useState(false);
     const [overlayLocked, setOverlayLocked] = useState(true);
-    const [showFineControls, setShowFineControls] = useState(false);
     const [canShare, setCanShare] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
-    const [showTextControls, setShowTextControls] = useState(true);
+    const [activeDock, setActiveDock] = useState<EditorDock>(templateMode === "overlay_logo" ? "overlay" : "photo");
     const [stageSize, setStageSize] = useState<StageSize>({
       width: MAX_PREVIEW_WIDTH,
       height: MAX_PREVIEW_WIDTH * 1.5,
@@ -326,8 +325,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     useEffect(() => {
       setPhotoLocked(false);
       setOverlayLocked(true);
-      setShowFineControls(false);
-      setShowTextControls(true);
+      setActiveDock(templateMode === "overlay_logo" ? "overlay" : "photo");
       setActiveLayer("photo");
     }, [templateMode]);
 
@@ -754,8 +752,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     function resetScene() {
       setPhotoLocked(false);
       setOverlayLocked(true);
-      setShowFineControls(false);
-      setShowTextControls(true);
+      setActiveDock(templateMode === "overlay_logo" ? "overlay" : "photo");
       setActiveLayer("photo");
 
       if (photoImage) {
@@ -808,6 +805,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     function toggleOverlayLock() {
       setOverlayLocked((current) => !current);
       setActiveLayer((current) => (current === "overlay" ? "photo" : "overlay"));
+      setActiveDock("overlay");
     }
 
     function getExportDataUrl() {
@@ -841,6 +839,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       try {
         downloadFromDataUrl(dataUrl);
         onDownload?.(dataUrl);
+        setActiveDock("photo");
       } catch {
         setActionMessage("Nao foi possivel iniciar o download neste navegador.");
       }
@@ -914,27 +913,6 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-stone-600 sm:text-sm">{interactionHint}</p>
               </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {isOverlayMode ? (
-                <Button variant={overlayLocked ? "secondary" : "primary"} onClick={toggleOverlayLock}>
-                  {overlayLocked ? "Destravar moldura" : "Travar moldura"}
-                </Button>
-              ) : null}
-              <ExportButton onClick={handleDownload} disabled={!photoImage || !frameImage} />
-              {canShare ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => void handleShare()}
-                  disabled={!photoImage || !frameImage}
-                >
-                  Compartilhar
-                </Button>
-              ) : null}
-              <Button variant="secondary" onClick={resetScene}>
-                Comecar de novo
-              </Button>
             </div>
           </div>
 
@@ -1073,192 +1051,276 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         </div>
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(280px,1.1fr)] xl:items-start">
-          <ZoomControls
-            photoZoom={photoState?.zoom ?? 1}
-            onPhotoZoomChange={handlePhotoZoomChange}
-            photoLocked={photoLocked}
-            logoScale={isOverlayMode ? overlayState?.scale : undefined}
-            onLogoScaleChange={isOverlayMode ? handleOverlayScaleChange : undefined}
-            logoLocked={isOverlayMode ? overlayLocked : undefined}
-          />
+        <div className="space-y-3">
+          <div className="overflow-x-auto pb-1">
+            <div className="inline-flex min-w-full gap-2 rounded-[24px] border border-stone-200 bg-[#f6efe2]/92 p-2 shadow-[0_18px_36px_-28px_rgba(22,19,18,0.18)]">
+              <button
+                type="button"
+                className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                  activeDock === "photo"
+                    ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                    : "bg-white text-stone-700"
+                }`}
+                onClick={() => setActiveDock("photo")}
+              >
+                <span className="text-base leading-none">📷</span>
+                <span className="mt-1">Foto</span>
+              </button>
 
-          {textEditable ? (
-            <div className="grid gap-3">
-              <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-                      Texto sobreposto
-                    </div>
-                    <div className="mt-1 text-xs leading-5 text-stone-600">
-                      Escreva, arraste e ajuste. O texto entra na imagem final.
-                    </div>
-                  </div>
-                  <Button variant="ghost" onClick={() => setShowTextControls((current) => !current)}>
-                    {showTextControls ? "Ocultar" : "Mostrar"}
-                  </Button>
+              {textEditable ? (
+                <button
+                  type="button"
+                  className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                    activeDock === "text"
+                      ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                      : "bg-white text-stone-700"
+                  }`}
+                  onClick={() => {
+                    setActiveLayer("text");
+                    setActiveDock("text");
+                  }}
+                >
+                  <span className="text-base leading-none">T</span>
+                  <span className="mt-1">Texto</span>
+                </button>
+              ) : null}
+
+              {isOverlayMode ? (
+                <button
+                  type="button"
+                  className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                    activeDock === "overlay"
+                      ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                      : "bg-white text-stone-700"
+                  }`}
+                  onClick={() => {
+                    setActiveLayer("overlay");
+                    setActiveDock("overlay");
+                  }}
+                >
+                  <span className="text-base leading-none">▣</span>
+                  <span className="mt-1">Moldura</span>
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                  activeDock === "adjust"
+                    ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                    : "bg-white text-stone-700"
+                }`}
+                onClick={() => setActiveDock("adjust")}
+              >
+                <span className="text-base leading-none">✦</span>
+                <span className="mt-1">Ajustes</span>
+              </button>
+
+              <button
+                type="button"
+                className="inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] bg-white px-3 py-2 text-[11px] font-bold text-stone-700 transition hover:text-ember"
+                onClick={handleDownload}
+              >
+                <span className="text-base leading-none">↓</span>
+                <span className="mt-1">Baixar</span>
+              </button>
+            </div>
+          </div>
+
+          {activeDock === "photo" ? (
+            <ZoomControls
+              photoZoom={photoState?.zoom ?? 1}
+              onPhotoZoomChange={handlePhotoZoomChange}
+              photoLocked={photoLocked}
+            />
+          ) : null}
+
+          {activeDock === "text" && textEditable ? (
+            <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Texto</div>
+                <div className="mt-1 text-xs leading-5 text-stone-600">
+                  Escreva, arraste e ajuste. O texto entra na imagem final.
                 </div>
               </div>
 
-              {showTextControls ? (
-                <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
-                  <label className="block">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-                      Texto
-                    </span>
-                    <textarea
-                      id={textFieldId}
-                      rows={2}
-                      value={textState.text}
-                      onFocus={() => setActiveLayer("text")}
-                      onChange={(event) => {
-                        setActiveLayer("text");
-                        updateTextState({ text: event.target.value });
-                      }}
-                      placeholder="Digite seu texto aqui"
-                      className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
-                    />
-                  </label>
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Conteudo</span>
+                <textarea
+                  id={textFieldId}
+                  rows={2}
+                  value={textState.text}
+                  onFocus={() => setActiveLayer("text")}
+                  onChange={(event) => {
+                    setActiveLayer("text");
+                    updateTextState({ text: event.target.value });
+                  }}
+                  placeholder="Digite seu texto aqui"
+                  className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
+                />
+              </label>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-                        Fonte
-                      </span>
-                      <select
-                        value={textState.fontFamily}
-                        onChange={(event) => {
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Fonte</span>
+                  <select
+                    value={textState.fontFamily}
+                    onChange={(event) => {
+                      setActiveLayer("text");
+                      updateTextState({ fontFamily: event.target.value });
+                    }}
+                    className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
+                  >
+                    {TEXT_FONT_OPTIONS.map((font) => (
+                      <option key={font.value} value={font.value}>
+                        {font.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                    Alinhamento
+                  </span>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(["left", "center", "right"] as const).map((align) => (
+                      <Button
+                        key={align}
+                        type="button"
+                        variant={textState.align === align ? "primary" : "secondary"}
+                        className="px-4 py-2 text-xs"
+                        onClick={() => {
                           setActiveLayer("text");
-                          updateTextState({ fontFamily: event.target.value });
+                          updateTextState({ align });
                         }}
-                        className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
                       >
-                        {TEXT_FONT_OPTIONS.map((font) => (
-                          <option key={font.value} value={font.value}>
-                            {font.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-                        Alinhamento
-                      </span>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {(["left", "center", "right"] as const).map((align) => (
-                          <Button
-                            key={align}
-                            type="button"
-                            variant={textState.align === align ? "primary" : "secondary"}
-                            className="px-4 py-2 text-xs"
-                            onClick={() => {
-                              setActiveLayer("text");
-                              updateTextState({ align });
-                            }}
-                          >
-                            {align === "left" ? "Esquerda" : align === "center" ? "Centro" : "Direita"}
-                          </Button>
-                        ))}
-                      </div>
-                    </label>
+                        {align === "left" ? "Esquerda" : align === "center" ? "Centro" : "Direita"}
+                      </Button>
+                    ))}
                   </div>
+                </label>
+              </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block text-sm font-medium text-stone-700">
-                      <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
-                        <span>Tamanho</span>
-                        <span>{Math.round(textState.fontSize)} px</span>
-                      </span>
-                      <input
-                        className="mt-2 w-full accent-orange-600"
-                        type="range"
-                        min="26"
-                        max="180"
-                        step="1"
-                        value={textState.fontSize}
-                        onChange={(event) => {
-                          setActiveLayer("text");
-                          updateTextState({ fontSize: Number(event.target.value) });
-                        }}
-                      />
-                    </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm font-medium text-stone-700">
+                  <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                    <span>Tamanho</span>
+                    <span>{Math.round(textState.fontSize)} px</span>
+                  </span>
+                  <input
+                    className="mt-2 w-full accent-orange-600"
+                    type="range"
+                    min="26"
+                    max="180"
+                    step="1"
+                    value={textState.fontSize}
+                    onChange={(event) => {
+                      setActiveLayer("text");
+                      updateTextState({ fontSize: Number(event.target.value) });
+                    }}
+                  />
+                </label>
 
-                    <label className="block text-sm font-medium text-stone-700">
-                      <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
-                        <span>Rotacao</span>
-                        <span>{Math.round(textState.rotation)}º</span>
-                      </span>
-                      <input
-                        className="mt-2 w-full accent-emerald-700"
-                        type="range"
-                        min="-45"
-                        max="45"
-                        step="1"
-                        value={textState.rotation}
-                        onChange={(event) => {
-                          setActiveLayer("text");
-                          updateTextState({ rotation: Number(event.target.value) });
-                        }}
-                      />
-                    </label>
-                  </div>
+                <label className="block text-sm font-medium text-stone-700">
+                  <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                    <span>Rotacao</span>
+                    <span>{Math.round(textState.rotation)}°</span>
+                  </span>
+                  <input
+                    className="mt-2 w-full accent-emerald-700"
+                    type="range"
+                    min="-45"
+                    max="45"
+                    step="1"
+                    value={textState.rotation}
+                    onChange={(event) => {
+                      setActiveLayer("text");
+                      updateTextState({ rotation: Number(event.target.value) });
+                    }}
+                  />
+                </label>
+              </div>
 
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Cor</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {TEXT_COLOR_OPTIONS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          aria-label={`Selecionar cor ${color}`}
-                          title={color}
-                          onClick={() => {
-                            setActiveLayer("text");
-                            updateTextState({ color });
-                          }}
-                          className={`h-10 w-10 rounded-full border-2 transition ${
-                            textState.color === color ? "border-ink scale-105" : "border-white"
-                          }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">Cor</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {TEXT_COLOR_OPTIONS.map((color) => (
+                    <button
+                      key={color}
                       type="button"
-                      variant={textState.shadowEnabled ? "primary" : "secondary"}
-                      className="px-4 py-2 text-xs"
+                      aria-label={`Selecionar cor ${color}`}
+                      title={color}
                       onClick={() => {
                         setActiveLayer("text");
-                        updateTextState({ shadowEnabled: !textState.shadowEnabled });
+                        updateTextState({ color });
                       }}
-                    >
-                      {textState.shadowEnabled ? "Sombra ligada" : "Ligar sombra"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={textState.strokeEnabled ? "primary" : "secondary"}
-                      className="px-4 py-2 text-xs"
-                      onClick={() => {
-                        setActiveLayer("text");
-                        updateTextState({ strokeEnabled: !textState.strokeEnabled });
-                      }}
-                    >
-                      {textState.strokeEnabled ? "Contorno ligado" : "Ligar contorno"}
-                    </Button>
-                  </div>
+                      className={`h-10 w-10 rounded-full border-2 transition ${
+                        textState.color === color ? "border-ink scale-105" : "border-white"
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
-              ) : null}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={textState.shadowEnabled ? "primary" : "secondary"}
+                  className="px-4 py-2 text-xs"
+                  onClick={() => {
+                    setActiveLayer("text");
+                    updateTextState({ shadowEnabled: !textState.shadowEnabled });
+                  }}
+                >
+                  {textState.shadowEnabled ? "Sombra ligada" : "Ligar sombra"}
+                </Button>
+                <Button
+                  type="button"
+                  variant={textState.strokeEnabled ? "primary" : "secondary"}
+                  className="px-4 py-2 text-xs"
+                  onClick={() => {
+                    setActiveLayer("text");
+                    updateTextState({ strokeEnabled: !textState.strokeEnabled });
+                  }}
+                >
+                  {textState.strokeEnabled ? "Contorno ligado" : "Ligar contorno"}
+                </Button>
+              </div>
             </div>
           ) : null}
         </div>
 
-        <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        {activeDock === "overlay" && isOverlayMode ? (
+          <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                  Moldura
+                </div>
+                <div className="mt-1 text-xs leading-5 text-stone-600">
+                  Destrave a moldura so quando quiser alinhar a camada de cima.
+                </div>
+              </div>
+              <Button type="button" variant={overlayLocked ? "secondary" : "primary"} onClick={toggleOverlayLock}>
+                {overlayLocked ? "Destravar moldura" : "Travar moldura"}
+              </Button>
+            </div>
+
+            <ZoomControls
+              photoZoom={photoState?.zoom ?? 1}
+              onPhotoZoomChange={handlePhotoZoomChange}
+              photoLocked
+              logoScale={overlayState?.scale}
+              onLogoScaleChange={handleOverlayScaleChange}
+              logoLocked={overlayLocked}
+            />
+          </div>
+        ) : null}
+
+        {activeDock === "adjust" ? (
+          <div className="grid min-w-0 gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
                 Ajustes finos
@@ -1273,58 +1335,58 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                       : "Pequenos ajustes na foto."}
               </div>
             </div>
-            <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
-              {showFineControls ? "Ocultar" : "Mostrar"}
-            </Button>
-          </div>
-        </div>
-
-        {showFineControls ? (
-          <div className="grid min-w-0 gap-3 rounded-[24px] border border-stone-200 bg-stone-50/70 p-3.5 sm:p-4">
-            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
-              Pequenos ajustes de posicao
-            </div>
 
             <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
               <Button
                 variant="secondary"
-                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
+                className="min-h-[44px] min-w-[44px] px-0 py-0 text-lg"
                 aria-label="Mover para esquerda"
                 title="Mover para esquerda"
-                disabled={activeLayerLocked}
+                disabled={activeLayerLocked || isTextActive}
                 onClick={() => handleMove("left")}
               >
                 ←
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
+                className="min-h-[44px] min-w-[44px] px-0 py-0 text-lg"
                 aria-label="Mover para cima"
                 title="Mover para cima"
-                disabled={activeLayerLocked}
+                disabled={activeLayerLocked || isTextActive}
                 onClick={() => handleMove("up")}
               >
                 ↑
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
+                className="min-h-[44px] min-w-[44px] px-0 py-0 text-lg"
                 aria-label="Mover para baixo"
                 title="Mover para baixo"
-                disabled={activeLayerLocked}
+                disabled={activeLayerLocked || isTextActive}
                 onClick={() => handleMove("down")}
               >
                 ↓
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
+                className="min-h-[44px] min-w-[44px] px-0 py-0 text-lg"
                 aria-label="Mover para direita"
                 title="Mover para direita"
-                disabled={activeLayerLocked}
+                disabled={activeLayerLocked || isTextActive}
                 onClick={() => handleMove("right")}
               >
                 →
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {canShare ? (
+                <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={() => void handleShare()}>
+                  Compartilhar
+                </Button>
+              ) : null}
+              <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={resetScene}>
+                Comecar de novo
               </Button>
             </div>
           </div>
