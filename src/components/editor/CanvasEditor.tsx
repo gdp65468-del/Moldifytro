@@ -293,10 +293,6 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       height: MAX_PREVIEW_WIDTH * 1.5,
     });
     const pinchDistanceRef = useRef<number | null>(null);
-    const pinchPhotoZoomRef = useRef<number>(1);
-    const pinchOverlayScaleRef = useRef<number>(1);
-    const pinchPhotoStateRef = useRef<PhotoState | null>(null);
-    const pinchOverlayStateRef = useRef<OverlayState | null>(null);
     const [photoImage, setPhotoImage] = useState<HTMLImageElement | null>(null);
     const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
     const [photoState, setPhotoState] = useState<PhotoState | null>(null);
@@ -311,6 +307,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [activeDock, setActiveDock] = useState<EditorDock>(templateMode === "overlay_logo" ? "overlay" : "photo");
     const [showCanvasHints, setShowCanvasHints] = useState(true);
+    const [isPinching, setIsPinching] = useState(false);
     const [stageSize, setStageSize] = useState<StageSize>({
       width: MAX_PREVIEW_WIDTH,
       height: MAX_PREVIEW_WIDTH * 1.5,
@@ -667,8 +664,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
     function resetPinchTracking() {
       pinchDistanceRef.current = null;
-      pinchPhotoStateRef.current = null;
-      pinchOverlayStateRef.current = null;
+      setIsPinching(false);
     }
 
     function handleStageTouchStart(event: Konva.KonvaEventObject<TouchEvent>) {
@@ -678,11 +674,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         return;
       }
 
+      setIsPinching(true);
       pinchDistanceRef.current = getTouchDistance(touches);
-      pinchPhotoZoomRef.current = photoState?.zoom ?? 1;
-      pinchOverlayScaleRef.current = overlayState?.scale ?? 1;
-      pinchPhotoStateRef.current = photoState;
-      pinchOverlayStateRef.current = overlayState;
+      event.target.stopDrag?.();
     }
 
     function dismissCanvasHints() {
@@ -703,33 +697,33 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
       if (!pinchDistanceRef.current) {
         pinchDistanceRef.current = distance;
-        pinchPhotoZoomRef.current = photoState?.zoom ?? 1;
-        pinchOverlayScaleRef.current = overlayState?.scale ?? 1;
-        pinchPhotoStateRef.current = photoState;
-        pinchOverlayStateRef.current = overlayState;
         return;
       }
 
       const ratio = distance / pinchDistanceRef.current;
 
-      if (isOverlayActive && frameImage && pinchOverlayStateRef.current && !overlayLocked) {
-        const nextScale = Math.min(2.5, Math.max(0.2, pinchOverlayScaleRef.current * ratio));
-        setOverlayState(
-          zoomOverlayAtPoint(pinchOverlayStateRef.current, frameImage, stageSize, center, nextScale),
+      if (isOverlayActive && frameImage && overlayState && !overlayLocked) {
+        const nextScale = Math.min(2.5, Math.max(0.2, overlayState.scale * ratio));
+        setOverlayState((current) =>
+          current ? zoomOverlayAtPoint(current, frameImage, stageSize, center, nextScale) : current,
         );
+        pinchDistanceRef.current = distance;
         return;
       }
 
-      if (photoImage && pinchPhotoStateRef.current && !photoLocked) {
-        const nextZoom = Math.min(3, Math.max(0.5, pinchPhotoZoomRef.current * ratio));
-        setPhotoState(
-          zoomPhotoAtPoint(pinchPhotoStateRef.current, photoImage, photoTarget, center, nextZoom),
+      if (photoImage && photoState && !photoLocked) {
+        const nextZoom = Math.min(3, Math.max(0.5, photoState.zoom * ratio));
+        setPhotoState((current) =>
+          current ? zoomPhotoAtPoint(current, photoImage, photoTarget, center, nextZoom) : current,
         );
+        pinchDistanceRef.current = distance;
       }
     }
 
-    function handleStageTouchEnd() {
-      resetPinchTracking();
+    function handleStageTouchEnd(event: Konva.KonvaEventObject<TouchEvent>) {
+      if (event.evt.touches.length < 2) {
+        resetPinchTracking();
+      }
     }
 
     function handleStageWheel(event: Konva.KonvaEventObject<WheelEvent>) {
@@ -989,6 +983,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                 width: stageSize.width,
                 height: stageSize.height,
                 background: "#fcfbf7",
+                touchAction: "none",
               }}
               onTouchStart={handleStageTouchStart}
               onTouchMove={handleStageTouchMove}
@@ -1006,7 +1001,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     y={photoState.y}
                     scaleX={actualPhotoScale}
                     scaleY={actualPhotoScale}
-                    draggable={!photoLocked && (!isOverlayMode || isPhotoActive)}
+                    draggable={!photoLocked && (!isOverlayMode || isPhotoActive) && !isPinching}
                     listening={!isOverlayMode || isPhotoActive}
                     onMouseDown={() => {
                       setActiveLayer("photo");
@@ -1028,7 +1023,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     y={overlayState.y}
                     scaleX={overlayState.scale}
                     scaleY={overlayState.scale}
-                    draggable={overlayEditable && !overlayLocked && isOverlayActive}
+                    draggable={overlayEditable && !overlayLocked && isOverlayActive && !isPinching}
                     listening={isOverlayActive}
                     onMouseDown={() => {
                       setActiveLayer("overlay");
@@ -1072,7 +1067,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     shadowColor={textState.shadowEnabled ? "rgba(22,19,18,0.4)" : undefined}
                     shadowBlur={textState.shadowEnabled ? 12 : 0}
                     shadowOffsetY={textState.shadowEnabled ? 3 : 0}
-                    draggable={textEditable}
+                    draggable={textEditable && !isPinching}
                     listening={textEditable}
                     onMouseDown={() => {
                       setActiveLayer("text");
