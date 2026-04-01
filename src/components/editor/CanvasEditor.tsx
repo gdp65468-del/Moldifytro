@@ -224,7 +224,12 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
     const [photoState, setPhotoState] = useState<PhotoState | null>(null);
     const [overlayState, setOverlayState] = useState<OverlayState | null>(null);
-    const [activeLayer, setActiveLayer] = useState<ActiveLayer>("photo");
+    const [activeLayer, setActiveLayer] = useState<ActiveLayer>(
+      templateMode === "overlay_logo" ? "overlay" : "photo",
+    );
+    const [photoLocked, setPhotoLocked] = useState(true);
+    const [overlayLocked, setOverlayLocked] = useState(false);
+    const [showFineControls, setShowFineControls] = useState(false);
     const [canShare, setCanShare] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [stageSize, setStageSize] = useState<StageSize>({
@@ -235,6 +240,13 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     useEffect(() => {
       setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
     }, []);
+
+    useEffect(() => {
+      setPhotoLocked(true);
+      setOverlayLocked(false);
+      setShowFineControls(false);
+      setActiveLayer(templateMode === "overlay_logo" ? "overlay" : "photo");
+    }, [templateMode]);
 
     useEffect(() => {
       const container = containerRef.current;
@@ -326,13 +338,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     useImperativeHandle(ref, () => ({
       exportImage: () => stageRef.current?.toDataURL({ pixelRatio: 1 }) ?? null,
       reset: () => {
-        if (photoImage) {
-          setPhotoState(clampPhoto(fitImage(photoImage, photoTarget), photoImage, photoTarget));
-        }
-
-        if (frameImage && templateMode === "overlay_logo") {
-          setOverlayState(overlayConfigToState(frameImage, stageSize, initialOverlayConfig));
-        }
+        resetScene();
       },
       getOverlayConfig: () => {
         if (templateMode !== "overlay_logo" || !frameImage || !overlayState) {
@@ -349,9 +355,20 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }));
 
     const actualPhotoScale = photoState ? photoState.baseScale * photoState.zoom : 1;
+    const isOverlayMode = templateMode === "overlay_logo";
+    const isPhotoActive = activeLayer === "photo";
+    const isOverlayActive = isOverlayMode && activeLayer === "overlay";
+    const activeLayerLocked = isOverlayActive ? overlayLocked : photoLocked;
+    const interactionHint = isOverlayActive
+      ? overlayLocked
+        ? "A logo esta travada. Toque no cadeado para destravar e mover."
+        : "Arraste a logo para posicionar. Quando precisar, use os ajustes finos."
+      : photoLocked
+        ? "A foto esta travada. Toque no cadeado para destravar e mover."
+        : "Arraste a foto livremente para encaixar do jeito que quiser.";
 
     function handlePhotoZoomChange(nextZoom: number) {
-      if (!photoState || !photoImage) {
+      if (!photoState || !photoImage || photoLocked) {
         return;
       }
 
@@ -371,7 +388,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleOverlayScaleChange(nextScale: number) {
-      if (!frameImage || !overlayState) {
+      if (!frameImage || !overlayState || overlayLocked) {
         return;
       }
 
@@ -391,7 +408,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function nudgePhoto(direction: MoveDirection) {
-      if (!photoImage || !photoState) {
+      if (!photoImage || !photoState || photoLocked) {
         return;
       }
 
@@ -419,7 +436,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function nudgeOverlay(direction: MoveDirection) {
-      if (!frameImage || !overlayState) {
+      if (!frameImage || !overlayState || overlayLocked) {
         return;
       }
 
@@ -447,7 +464,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleMove(direction: MoveDirection) {
-      if (templateMode === "overlay_logo" && activeLayer === "overlay") {
+      if (isOverlayActive) {
         nudgeOverlay(direction);
         return;
       }
@@ -456,13 +473,13 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleZoomStep(direction: "in" | "out") {
-      if (templateMode === "overlay_logo" && activeLayer === "overlay" && overlayState) {
+      if (isOverlayActive && overlayState && !overlayLocked) {
         const nextScale = direction === "in" ? overlayState.scale + 0.08 : overlayState.scale - 0.08;
         handleOverlayScaleChange(Math.min(2.5, Math.max(0.2, Number(nextScale.toFixed(2)))));
         return;
       }
 
-      if (!photoState) {
+      if (!photoState || photoLocked) {
         return;
       }
 
@@ -502,7 +519,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
     function handleStageTouchStart(event: Konva.KonvaEventObject<TouchEvent>) {
       const touches = event.evt.touches;
-      if (touches.length !== 2) {
+      if (touches.length !== 2 || activeLayerLocked) {
         return;
       }
 
@@ -535,12 +552,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
       const ratio = distance / pinchDistanceRef.current;
 
-      if (
-        activeLayer === "overlay" &&
-        templateMode === "overlay_logo" &&
-        frameImage &&
-        pinchOverlayStateRef.current
-      ) {
+      if (isOverlayActive && frameImage && pinchOverlayStateRef.current && !overlayLocked) {
         const nextScale = Math.min(2.5, Math.max(0.2, pinchOverlayScaleRef.current * ratio));
         setOverlayState(
           zoomOverlayAtPoint(pinchOverlayStateRef.current, frameImage, stageSize, center, nextScale),
@@ -548,7 +560,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         return;
       }
 
-      if (photoImage && pinchPhotoStateRef.current) {
+      if (photoImage && pinchPhotoStateRef.current && !photoLocked) {
         const nextZoom = Math.min(3, Math.max(0.5, pinchPhotoZoomRef.current * ratio));
         setPhotoState(
           zoomPhotoAtPoint(pinchPhotoStateRef.current, photoImage, photoTarget, center, nextZoom),
@@ -561,6 +573,10 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function handleStageWheel(event: Konva.KonvaEventObject<WheelEvent>) {
+      if (activeLayerLocked) {
+        return;
+      }
+
       event.evt.preventDefault();
 
       const stage = stageRef.current;
@@ -572,19 +588,24 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       const zoomIn = event.evt.deltaY < 0;
       const factor = zoomIn ? 1.08 : 1 / 1.08;
 
-      if (activeLayer === "overlay" && templateMode === "overlay_logo" && frameImage && overlayState) {
+      if (isOverlayActive && frameImage && overlayState && !overlayLocked) {
         const nextScale = Math.min(2.5, Math.max(0.2, overlayState.scale * factor));
         setOverlayState(zoomOverlayAtPoint(overlayState, frameImage, stageSize, pointer, nextScale));
         return;
       }
 
-      if (photoImage && photoState) {
+      if (photoImage && photoState && !photoLocked) {
         const nextZoom = Math.min(3, Math.max(0.5, photoState.zoom * factor));
         setPhotoState(zoomPhotoAtPoint(photoState, photoImage, photoTarget, pointer, nextZoom));
       }
     }
 
     function resetScene() {
+      setPhotoLocked(true);
+      setOverlayLocked(false);
+      setShowFineControls(false);
+      setActiveLayer(templateMode === "overlay_logo" ? "overlay" : "photo");
+
       if (photoImage) {
         setPhotoState(clampPhoto(fitImage(photoImage, photoTarget), photoImage, photoTarget));
       }
@@ -592,6 +613,52 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       if (frameImage && templateMode === "overlay_logo") {
         setOverlayState(overlayConfigToState(frameImage, stageSize, initialOverlayConfig));
       }
+    }
+
+    function handlePhotoDragPosition(x: number, y: number) {
+      if (!photoImage || !photoState || photoLocked) {
+        return;
+      }
+
+      setPhotoState(
+        clampPhoto(
+          {
+            ...photoState,
+            x,
+            y,
+          },
+          photoImage,
+          photoTarget,
+        ),
+      );
+    }
+
+    function handleOverlayDragPosition(x: number, y: number) {
+      if (!frameImage || !overlayState || overlayLocked) {
+        return;
+      }
+
+      setOverlayState(
+        clampOverlay(
+          {
+            ...overlayState,
+            x,
+            y,
+          },
+          frameImage,
+          stageSize,
+        ),
+      );
+    }
+
+    function togglePhotoLock() {
+      setPhotoLocked((current) => !current);
+      setActiveLayer("photo");
+    }
+
+    function toggleOverlayLock() {
+      setOverlayLocked((current) => !current);
+      setActiveLayer("overlay");
     }
 
     function getExportDataUrl() {
@@ -675,7 +742,12 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               width={stageSize.width}
               height={stageSize.height}
               className="overflow-hidden rounded-[28px]"
-              style={{ display: "block", width: stageSize.width, height: stageSize.height, background: "#fcfbf7" }}
+              style={{
+                display: "block",
+                width: stageSize.width,
+                height: stageSize.height,
+                background: "#fcfbf7",
+              }}
               onTouchStart={handleStageTouchStart}
               onTouchMove={handleStageTouchMove}
               onTouchEnd={handleStageTouchEnd}
@@ -691,56 +763,28 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     y={photoState.y}
                     scaleX={actualPhotoScale}
                     scaleY={actualPhotoScale}
-                    draggable
+                    draggable={!photoLocked && (!isOverlayMode || isPhotoActive)}
+                    listening={!isOverlayMode || isPhotoActive}
                     onMouseDown={() => setActiveLayer("photo")}
                     onTouchStart={() => setActiveLayer("photo")}
-                    onDragEnd={(event) => {
-                      if (!photoImage || !photoState) {
-                        return;
-                      }
-
-                      setPhotoState(
-                        clampPhoto(
-                          {
-                            ...photoState,
-                            x: event.target.x(),
-                            y: event.target.y(),
-                          },
-                          photoImage,
-                          photoTarget,
-                        ),
-                      );
-                    }}
+                    onDragMove={(event) => handlePhotoDragPosition(event.target.x(), event.target.y())}
+                    onDragEnd={(event) => handlePhotoDragPosition(event.target.x(), event.target.y())}
                   />
                 ) : null}
 
-                {templateMode === "overlay_logo" && frameImage && overlayState ? (
+                {isOverlayMode && frameImage && overlayState ? (
                   <KonvaImage
                     image={frameImage}
                     x={overlayState.x}
                     y={overlayState.y}
                     scaleX={overlayState.scale}
                     scaleY={overlayState.scale}
-                    draggable={overlayEditable}
+                    draggable={overlayEditable && !overlayLocked && isOverlayActive}
+                    listening={isOverlayActive}
                     onMouseDown={() => setActiveLayer("overlay")}
                     onTouchStart={() => setActiveLayer("overlay")}
-                    onDragEnd={(event) => {
-                      if (!frameImage || !overlayState || !overlayEditable) {
-                        return;
-                      }
-
-                      setOverlayState(
-                        clampOverlay(
-                          {
-                            ...overlayState,
-                            x: event.target.x(),
-                            y: event.target.y(),
-                          },
-                          frameImage,
-                          stageSize,
-                        ),
-                      );
-                    }}
+                    onDragMove={(event) => handleOverlayDragPosition(event.target.x(), event.target.y())}
+                    onDragEnd={(event) => handleOverlayDragPosition(event.target.x(), event.target.y())}
                   />
                 ) : null}
 
@@ -751,6 +795,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
                     y={0}
                     width={stageSize.width}
                     height={stageSize.height}
+                    listening={false}
                   />
                 ) : null}
               </Layer>
@@ -761,105 +806,135 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         <ZoomControls
           photoZoom={photoState?.zoom ?? 1}
           onPhotoZoomChange={handlePhotoZoomChange}
-          logoScale={templateMode === "overlay_logo" ? overlayState?.scale : undefined}
-          onLogoScaleChange={templateMode === "overlay_logo" ? handleOverlayScaleChange : undefined}
+          photoLocked={photoLocked}
+          logoScale={isOverlayMode ? overlayState?.scale : undefined}
+          onLogoScaleChange={isOverlayMode ? handleOverlayScaleChange : undefined}
+          logoLocked={isOverlayMode ? overlayLocked : undefined}
         />
 
-        {templateMode === "overlay_logo" ? (
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant={activeLayer === "photo" ? "primary" : "secondary"}
-              onClick={() => setActiveLayer("photo")}
-            >
-              Editar foto
-            </Button>
-            <Button
-              variant={activeLayer === "overlay" ? "primary" : "secondary"}
-              onClick={() => setActiveLayer("overlay")}
-            >
-              Editar logo
-            </Button>
-          </div>
-        ) : null}
-
-        <div className="grid min-w-0 gap-4 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
+        <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-sm font-semibold text-ink">Controles por botao</div>
-              <div className="text-xs text-stone-500">
-                {templateMode === "overlay_logo" && activeLayer === "overlay"
-                  ? "Movendo e aplicando zoom na logo"
-                  : "Movendo e aplicando zoom na foto"}
-              </div>
+              <div className="text-sm font-semibold text-ink">Camada em edicao</div>
+              <div className="text-xs text-stone-500">{interactionHint}</div>
             </div>
+            <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
+              {showFineControls ? "Ocultar ajustes finos" : "Mostrar ajustes finos"}
+            </Button>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
-              aria-label="Mover para esquerda"
-              title="Mover para esquerda"
-              onClick={() => handleMove("left")}
-            >
-              ←
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
-              aria-label="Mover para cima"
-              title="Mover para cima"
-              onClick={() => handleMove("up")}
-            >
-              ↑
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
-              aria-label="Mover para baixo"
-              title="Mover para baixo"
-              onClick={() => handleMove("down")}
-            >
-              ↓
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
-              aria-label="Mover para direita"
-              title="Mover para direita"
-              onClick={() => handleMove("right")}
-            >
-              →
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
-              aria-label="Diminuir zoom"
-              title="Diminuir zoom"
-              onClick={() => handleZoomStep("out")}
-            >
-              −
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
-              aria-label="Aumentar zoom"
-              title="Aumentar zoom"
-              onClick={() => handleZoomStep("in")}
-            >
-              +
-            </Button>
-            <Button
-              variant="secondary"
-              className="min-h-[48px] min-w-[48px] px-0 py-0 text-base"
-              aria-label="Centralizar"
-              title="Centralizar"
-              onClick={resetScene}
-            >
-              ○
-            </Button>
-          </div>
+          {isOverlayMode ? (
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant={isPhotoActive ? "primary" : "secondary"}
+                onClick={() => setActiveLayer("photo")}
+              >
+                Foto
+              </Button>
+              <Button variant={photoLocked ? "secondary" : "ghost"} onClick={togglePhotoLock}>
+                {photoLocked ? "Destravar foto" : "Travar foto"}
+              </Button>
+              <Button
+                variant={isOverlayActive ? "primary" : "secondary"}
+                onClick={() => setActiveLayer("overlay")}
+              >
+                Logo
+              </Button>
+              <Button variant={overlayLocked ? "secondary" : "ghost"} onClick={toggleOverlayLock}>
+                {overlayLocked ? "Destravar logo" : "Travar logo"}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <span className="inline-flex items-center justify-center rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white">
+                Foto
+              </span>
+              <Button variant={photoLocked ? "secondary" : "ghost"} onClick={togglePhotoLock}>
+                {photoLocked ? "Destravar foto" : "Travar foto"}
+              </Button>
+            </div>
+          )}
         </div>
+
+        {showFineControls ? (
+          <div className="grid min-w-0 gap-4 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-ink">Ajustes finos</div>
+                <div className="text-xs text-stone-500">
+                  {activeLayerLocked
+                    ? "Destrave a camada ativa para usar os controles de precisao."
+                    : isOverlayActive
+                      ? "Use os botoes para pequenos ajustes na logo."
+                      : "Use os botoes para pequenos ajustes na foto."}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                aria-label="Mover para esquerda"
+                title="Mover para esquerda"
+                disabled={activeLayerLocked}
+                onClick={() => handleMove("left")}
+              >
+                ←
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                aria-label="Mover para cima"
+                title="Mover para cima"
+                disabled={activeLayerLocked}
+                onClick={() => handleMove("up")}
+              >
+                ↑
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                aria-label="Mover para baixo"
+                title="Mover para baixo"
+                disabled={activeLayerLocked}
+                onClick={() => handleMove("down")}
+              >
+                ↓
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                aria-label="Mover para direita"
+                title="Mover para direita"
+                disabled={activeLayerLocked}
+                onClick={() => handleMove("right")}
+              >
+                →
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
+                aria-label="Diminuir zoom"
+                title="Diminuir zoom"
+                disabled={activeLayerLocked}
+                onClick={() => handleZoomStep("out")}
+              >
+                -
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
+                aria-label="Aumentar zoom"
+                title="Aumentar zoom"
+                disabled={activeLayerLocked}
+                onClick={() => handleZoomStep("in")}
+              >
+                +
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-3">
           <ExportButton onClick={handleDownload} disabled={!photoImage || !frameImage} />
@@ -869,15 +944,18 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             </Button>
           ) : null}
           <Button variant="secondary" onClick={resetScene}>
-            Resetar posicoes
+            Comecar de novo
           </Button>
         </div>
 
-        <div className="text-sm text-stone-600">
-          {helperText ??
-            (templateMode === "overlay_logo"
-              ? "Use mouse ou toque para arrastar. Role o mouse ou use dois dedos para zoom na camada selecionada."
-              : "Use mouse ou toque para arrastar a foto. Role o mouse ou use dois dedos para zoom.")}
+        <div className="space-y-2 text-sm text-stone-600">
+          <div>{interactionHint}</div>
+          <div>
+            {helperText ??
+              (isOverlayMode
+                ? "Use o zoom para ajustar a camada ativa. Quando precisar, destrave a foto para mover livremente."
+                : "Destrave a foto para mover, ajuste o zoom e baixe quando estiver do seu jeito.")}
+          </div>
         </div>
 
         {actionMessage ? <div className="text-sm text-red-700">{actionMessage}</div> : null}
