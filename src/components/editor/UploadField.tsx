@@ -23,16 +23,18 @@ export function UploadField({
     >
       <label
         className={`flex cursor-pointer flex-col rounded-[28px] ${
-          compact ? "gap-1.5 p-4" : "gap-2 p-5"
+          compact ? "gap-1 p-3.5 sm:p-4" : "gap-2 p-5"
         }`}
       >
-        <span className="text-sm font-semibold text-ink">{title}</span>
-        <span className={`${compact ? "text-xs leading-5" : "text-sm leading-6"} text-stone-600`}>
+        <span className={`${compact ? "text-xs font-bold uppercase tracking-[0.18em]" : "text-sm font-semibold"} text-ink`}>
+          {title}
+        </span>
+        <span className={`${compact ? "text-xs leading-4.5" : "text-sm leading-6"} text-stone-600`}>
           {subtitle}
         </span>
         <span
           className={`inline-flex w-fit rounded-full bg-ember font-semibold text-white shadow-lg shadow-orange-500/20 ${
-            compact ? "mt-2 px-3.5 py-2 text-xs" : "mt-3 px-4 py-2 text-sm"
+            compact ? "mt-1.5 px-3 py-1.5 text-[11px]" : "mt-3 px-4 py-2 text-sm"
           }`}
         >
           Escolher arquivo

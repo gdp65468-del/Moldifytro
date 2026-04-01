@@ -16,9 +16,12 @@ export function ZoomControls({
   logoLocked = false,
 }: ZoomControlsProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
       <label className="block text-sm font-medium text-stone-700">
-        Aproximar foto
+        <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+          <span>Aproximar foto</span>
+          <span>{Math.round(photoZoom * 100)}%</span>
+        </span>
         <input
           className="mt-2 w-full accent-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           type="range"
@@ -29,7 +32,7 @@ export function ZoomControls({
           disabled={photoLocked}
           onChange={(event) => onPhotoZoomChange(Number(event.target.value))}
         />
-        <span className="mt-2 block text-xs text-stone-500">
+        <span className="mt-1.5 block text-[11px] leading-5 text-stone-500">
           {photoLocked
             ? "Destrave a foto para mover ou ajustar o zoom."
             : "Use o controle para aproximar ou afastar a foto."}
@@ -38,7 +41,10 @@ export function ZoomControls({
 
       {typeof logoScale === "number" && onLogoScaleChange ? (
         <label className="block text-sm font-medium text-stone-700">
-          Tamanho da logo
+          <span className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+            <span>Tamanho da moldura</span>
+            <span>{Math.round(logoScale * 100)}%</span>
+          </span>
           <input
             className="mt-2 w-full accent-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             type="range"
@@ -49,10 +55,10 @@ export function ZoomControls({
             disabled={logoLocked}
             onChange={(event) => onLogoScaleChange(Number(event.target.value))}
           />
-          <span className="mt-2 block text-xs text-stone-500">
+          <span className="mt-1.5 block text-[11px] leading-5 text-stone-500">
             {logoLocked
-              ? "Destrave a logo para mover ou redimensionar."
-              : "Ajuste o tamanho da logo do jeito que fizer mais sentido na arte."}
+              ? "Destrave a moldura para mover ou redimensionar."
+              : "Ajuste o tamanho da moldura do jeito que fizer mais sentido na arte."}
           </span>
         </label>
       ) : null}

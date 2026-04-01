@@ -362,9 +362,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const topLayerLabel = isOverlayMode ? "Camada superior" : "Moldura";
     const interactionHint = isOverlayMode
       ? overlayLocked
-        ? "A camada superior esta travada. A foto ja esta livre para voce ajustar."
-        : "A camada superior esta destravada. Arraste para alinhar e trave de novo quando terminar."
-      : "Arraste a foto livremente para encaixar do jeito que quiser.";
+        ? "Arraste a foto. Destrave a moldura so quando quiser ajustar a camada de cima."
+        : "Mova a moldura, alinhe no canvas e trave de novo quando terminar."
+      : "Arraste a foto e use o zoom para encaixar do jeito que quiser.";
 
     function handlePhotoZoomChange(nextZoom: number) {
       if (!photoState || !photoImage || photoLocked) {
@@ -728,38 +728,99 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     return (
-      <Panel className="min-w-0 overflow-hidden space-y-5">
-        <div className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2 sm:p-3">
-          <div
-            ref={containerRef}
-            className="editor-stage relative mx-auto w-full max-w-[420px] overflow-hidden"
-          >
-            <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
-              <div className="rounded-full border border-white/70 bg-white/88 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                {isOverlayMode ? `${topLayerLabel} fixa` : "Foto em edicao"}
+      <Panel variant="compact" size="sm" className="min-w-0 overflow-hidden space-y-4">
+        <div className="grid gap-3 rounded-[28px] border border-stone-200 bg-white/78 p-3 sm:p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">
+                  {isOverlayMode ? topLayerLabel : "Foto livre"}
+                </span>
+                <span
+                  className={`rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${
+                    isOverlayMode && overlayLocked
+                      ? "border border-amber-200 bg-amber-50 text-amber-700"
+                      : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                  }`}
+                >
+                  {isOverlayMode
+                    ? overlayLocked
+                      ? "Travada"
+                      : "Destravada"
+                    : "Pronta para mover"}
+                </span>
               </div>
-              <div
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur ${
-                  isOverlayMode && overlayLocked
-                    ? "border border-amber-200 bg-amber-50/95 text-amber-700"
-                    : "border border-emerald-200 bg-emerald-50/95 text-emerald-700"
-                }`}
-              >
-                {isOverlayMode
-                  ? overlayLocked
-                    ? "Cadeado da moldura ligado"
-                    : "Moldura destravada"
-                  : "Foto livre para mover"}
+              <div>
+                <h3 className="text-base font-bold text-ink sm:text-lg">
+                  {isOverlayMode ? "Ajuste a foto e a moldura" : "Ajuste sua foto"}
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-stone-600 sm:text-sm">{interactionHint}</p>
               </div>
             </div>
 
-            <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/70 bg-white/82 px-3 py-2 text-xs text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-              {isOverlayMode
-                ? overlayLocked
-                  ? 'A foto ja esta livre. Toque em "Destravar moldura" se quiser ajustar a camada de cima.'
-                  : 'Mova a moldura do jeito que quiser e trave de novo quando terminar.'
-                : "Arraste a foto livremente dentro da arte."}
+            <div className="flex flex-wrap gap-2">
+              {isOverlayMode ? (
+                <Button variant={overlayLocked ? "secondary" : "primary"} onClick={toggleOverlayLock}>
+                  {overlayLocked ? "Destravar moldura" : "Travar moldura"}
+                </Button>
+              ) : null}
+              <ExportButton onClick={handleDownload} disabled={!photoImage || !frameImage} />
+              {canShare ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => void handleShare()}
+                  disabled={!photoImage || !frameImage}
+                >
+                  Compartilhar
+                </Button>
+              ) : null}
+              <Button variant="secondary" onClick={resetScene}>
+                Comecar de novo
+              </Button>
             </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2 sm:p-3">
+            <div
+              ref={containerRef}
+              className="editor-stage relative mx-auto w-full max-w-[420px] overflow-hidden"
+            >
+              <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
+                <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                  {isOverlayMode ? "Arraste a foto" : "Toque e arraste"}
+                </div>
+                <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1.5 text-[11px] font-bold text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                  {isOverlayMode && overlayLocked ? "Moldura fixa" : "Canvas livre"}
+                </div>
+              </div>
+
+              <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-2">
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white/88 text-lg font-bold text-ink shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur transition hover:text-ember disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Aumentar zoom"
+                  disabled={activeLayerLocked}
+                  onClick={() => handleZoomStep("in")}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white/88 text-lg font-bold text-ink shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur transition hover:text-ember disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Diminuir zoom"
+                  disabled={activeLayerLocked}
+                  onClick={() => handleZoomStep("out")}
+                >
+                  -
+                </button>
+              </div>
+
+              <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-4.75rem)] rounded-2xl border border-white/80 bg-white/84 px-3 py-2 text-[11px] font-semibold leading-5 text-stone-700 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
+                {helperText ??
+                  (isOverlayMode
+                    ? "A foto ja esta livre. Destrave a moldura so quando quiser alinhar a camada de cima."
+                    : "Arraste a foto e use o zoom para acertar o enquadramento.")}
+              </div>
             <Stage
               ref={stageRef}
               width={stageSize.width}
@@ -825,72 +886,49 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             </Stage>
           </div>
         </div>
+        </div>
 
-        <ZoomControls
-          photoZoom={photoState?.zoom ?? 1}
-          onPhotoZoomChange={handlePhotoZoomChange}
-          photoLocked={photoLocked}
-          logoScale={isOverlayMode ? overlayState?.scale : undefined}
-          onLogoScaleChange={isOverlayMode ? handleOverlayScaleChange : undefined}
-          logoLocked={isOverlayMode ? overlayLocked : undefined}
-        />
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <ZoomControls
+            photoZoom={photoState?.zoom ?? 1}
+            onPhotoZoomChange={handlePhotoZoomChange}
+            photoLocked={photoLocked}
+            logoScale={isOverlayMode ? overlayState?.scale : undefined}
+            onLogoScaleChange={isOverlayMode ? handleOverlayScaleChange : undefined}
+            logoLocked={isOverlayMode ? overlayLocked : undefined}
+          />
 
-        <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold text-ink">
-                {isOverlayMode ? "Ajuste da moldura" : "Ajuste da foto"}
+          <div className="rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:min-w-[220px] sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                  Ajustes finos
+                </div>
+                <div className="mt-1 text-xs leading-5 text-stone-600">
+                  {activeLayerLocked
+                    ? "Destrave a camada ativa para usar os botoes."
+                    : isOverlayActive
+                      ? "Pequenos ajustes na moldura."
+                      : "Pequenos ajustes na foto."}
+                </div>
               </div>
-              <div className="text-xs text-stone-500">{interactionHint}</div>
+              <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
+                {showFineControls ? "Ocultar" : "Mostrar"}
+              </Button>
             </div>
-            <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
-              {showFineControls ? "Ocultar ajustes finos" : "Mostrar ajustes finos"}
-            </Button>
           </div>
-
-          {isOverlayMode ? (
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setActiveLayer("photo")}
-              >
-                Foto livre
-              </Button>
-              <Button
-                variant={overlayLocked ? "secondary" : "primary"}
-                onClick={toggleOverlayLock}
-              >
-                {overlayLocked ? "Destravar moldura" : "Travar moldura"}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-3">
-              <span className="inline-flex items-center justify-center rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white">
-                Foto livre
-              </span>
-            </div>
-          )}
         </div>
 
         {showFineControls ? (
-          <div className="grid min-w-0 gap-4 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-ink">Ajustes finos</div>
-                <div className="text-xs text-stone-500">
-                  {activeLayerLocked
-                    ? "Destrave a camada ativa para usar os controles de precisao."
-                    : isOverlayActive
-                      ? "Use os botoes para pequenos ajustes na logo."
-                      : "Use os botoes para pequenos ajustes na foto."}
-                </div>
-              </div>
+          <div className="grid min-w-0 gap-3 rounded-[24px] border border-stone-200 bg-stone-50/70 p-3.5 sm:p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+              Pequenos ajustes de posicao
             </div>
 
             <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
               <Button
                 variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
                 aria-label="Mover para esquerda"
                 title="Mover para esquerda"
                 disabled={activeLayerLocked}
@@ -900,7 +938,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
                 aria-label="Mover para cima"
                 title="Mover para cima"
                 disabled={activeLayerLocked}
@@ -910,7 +948,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
                 aria-label="Mover para baixo"
                 title="Mover para baixo"
                 disabled={activeLayerLocked}
@@ -920,7 +958,7 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               </Button>
               <Button
                 variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-lg"
+                className="min-h-[46px] min-w-[46px] px-0 py-0 text-lg"
                 aria-label="Mover para direita"
                 title="Mover para direita"
                 disabled={activeLayerLocked}
@@ -928,50 +966,15 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
               >
                 →
               </Button>
-              <Button
-                variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
-                aria-label="Diminuir zoom"
-                title="Diminuir zoom"
-                disabled={activeLayerLocked}
-                onClick={() => handleZoomStep("out")}
-              >
-                -
-              </Button>
-              <Button
-                variant="secondary"
-                className="min-h-[48px] min-w-[48px] px-0 py-0 text-xl"
-                aria-label="Aumentar zoom"
-                title="Aumentar zoom"
-                disabled={activeLayerLocked}
-                onClick={() => handleZoomStep("in")}
-              >
-                +
-              </Button>
             </div>
           </div>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
-          <ExportButton onClick={handleDownload} disabled={!photoImage || !frameImage} />
-          {canShare ? (
-            <Button onClick={() => void handleShare()} disabled={!photoImage || !frameImage}>
-              Compartilhar
-            </Button>
-          ) : null}
-          <Button variant="secondary" onClick={resetScene}>
-            Comecar de novo
-          </Button>
-        </div>
-
-        <div className="space-y-2 text-sm text-stone-600">
-          <div>{interactionHint}</div>
-          <div>
-            {helperText ??
-              (isOverlayMode
-                ? "A foto ja fica livre. Se quiser alinhar a camada de cima, destrave a moldura, ajuste e trave novamente."
-                : "Arraste a foto, ajuste o zoom e baixe quando estiver do seu jeito.")}
-          </div>
+        <div className="rounded-[22px] border border-stone-200 bg-stone-50/70 px-4 py-3 text-xs font-semibold leading-5 text-stone-600 sm:text-sm">
+          {helperText ??
+            (isOverlayMode
+              ? "A foto ja esta livre. Destrave a moldura so quando quiser alinhar a camada de cima."
+              : "Arraste a foto, ajuste o zoom e baixe quando ficar do seu jeito.")}
         </div>
 
         {actionMessage ? <div className="text-sm text-red-700">{actionMessage}</div> : null}

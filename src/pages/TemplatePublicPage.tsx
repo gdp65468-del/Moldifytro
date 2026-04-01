@@ -122,14 +122,14 @@ export function TemplatePublicPage() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-7">
+    <div className="space-y-4 md:space-y-5">
       <Panel
         variant="hero"
-        size="lg"
+        size="sm"
         className="overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(29,58,47,0.12),transparent_34%),linear-gradient(140deg,rgba(255,248,239,0.98),rgba(255,255,255,0.92))]"
       >
-        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
-          <div className="space-y-5">
+        <div className="space-y-4">
+          <div className="space-y-3">
             <div className="space-y-3">
               <span className="inline-flex rounded-full border border-ember/20 bg-white/75 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-ember">
                 {campaignLabel}
@@ -157,39 +157,21 @@ export function TemplatePublicPage() {
             </div>
 
             <UploadField
+              compact
               title={photoSrc ? "Trocar foto" : "Enviar foto agora"}
-              subtitle="Escolha sua imagem para abrir o editor ja pronto para ajuste e download."
+              subtitle="Escolha sua imagem para abrir o editor e ajustar na hora."
               accept="image/*"
               onChange={(event) => {
                 void handlePhotoChange(event);
               }}
             />
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-stone-600">
-              <span>Compartilhe este link com quem vai criar a arte.</span>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-stone-600">
+              <span>Compartilhe este link com quem vai montar a arte.</span>
               <Button variant="secondary" onClick={() => void handleCopyLink()}>
                 {copied ? "Link copiado" : "Copiar link"}
               </Button>
             </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <div className="rounded-[24px] border border-white/85 bg-white/74 px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">
-                  Edicao livre
-                </p>
-                <p className="mt-2 text-sm leading-6 text-stone-700">
-                  Upload, ajuste e download no mesmo fluxo, sem tela tecnica no meio.
-                </p>
-              </div>
-              <div className="rounded-[24px] bg-[#1d3a2f] px-4 py-4 text-white">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-                  Resultado rapido
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/90">
-                  Envie sua foto, ajuste do seu jeito e baixe a arte pronta sem precisar criar conta.
-                </p>
-              </div>
           </div>
         </div>
       </Panel>
@@ -197,27 +179,27 @@ export function TemplatePublicPage() {
       <div ref={editorRef}>
         <Panel
           variant="soft"
-          size="lg"
+          size="sm"
           className="overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(251,247,240,0.96))]"
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ember">
                   Ajuste sua foto
                 </p>
-                <h2 className="mt-2 font-display text-3xl font-bold text-ink md:text-4xl">
-                  Veja sua arte ganhando forma
+                <h2 className="mt-2 font-display text-2xl font-bold text-ink md:text-3xl">
+                  Ajuste e baixe
                 </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-600 md:text-base">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 md:text-base">
                   {editorHelper}
                 </p>
               </div>
 
-              <div className="rounded-[24px] border border-stone-200 bg-white/80 px-4 py-3 text-sm text-stone-600">
+              <div className="rounded-[22px] border border-stone-200 bg-white/80 px-4 py-3 text-sm font-semibold text-stone-600">
                 {photoSrc
-                  ? "Sua foto ja esta no editor. Ajuste livremente e baixe quando ficar pronta."
-                  : "Envie sua foto acima para abrir o resultado completo no editor."}
+                  ? "Sua foto ja esta no editor."
+                  : "Envie sua foto para abrir o editor."}
               </div>
             </div>
 
@@ -242,28 +224,17 @@ export function TemplatePublicPage() {
 
       <Panel
         variant="soft"
-        size="lg"
+        size="sm"
         className="bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(248,239,226,0.96))]"
       >
-        <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ember">
-              Pronto para baixar
-            </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-ink">Fluxo simples, resultado rapido</h2>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-stone-600 md:text-base">
-              Depois do upload, voce so precisa ajustar o enquadramento e tocar em baixar. O arquivo sai em PNG,
-              pronto para compartilhar.
-            </p>
+        <div className="space-y-4">
+          {message ? (
+            <div className="rounded-[22px] border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold leading-6 text-orange-900">
+              {message}
+            </div>
+          ) : null}
 
-            {message ? (
-              <div className="mt-5 rounded-[24px] border border-orange-200 bg-orange-50 px-4 py-4 text-sm leading-6 text-orange-900">
-                {message}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-[26px] border border-stone-200 bg-white/85 p-5">
               <div className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">1. Escolha</div>
               <h3 className="mt-3 text-lg font-semibold text-ink">Envie uma boa foto</h3>

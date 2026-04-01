@@ -157,8 +157,8 @@ export function EditorPage() {
   }
 
   return (
-    <div className="min-w-0 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="min-w-0 space-y-4 sm:space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm uppercase tracking-[0.18em] text-ember">
             {mode === "full_frame" ? "Moldura completa" : "Logo sobreposta"}
@@ -166,6 +166,11 @@ export function EditorPage() {
           <h1 className="font-display text-3xl font-bold leading-tight text-ink sm:text-4xl">
             {viewOnlyPlatform ? "Editor da moldura da plataforma" : "Editor de template"}
           </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
+            {mode === "overlay_logo"
+              ? "Arraste a foto livremente e destrave a camada de cima so quando quiser alinhar."
+              : "Envie a foto, ajuste no canvas e siga para publicar quando estiver pronta."}
+          </p>
         </div>
 
         {!viewOnlyPlatform ? (
@@ -188,14 +193,14 @@ export function EditorPage() {
         <Panel className={`p-4 text-sm ${topMessageClassName}`}>{message}</Panel>
       ) : null}
 
-      <div className="space-y-5">
-        <Panel className="space-y-4 p-4 sm:p-5">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.95fr)]">
+      <div className="space-y-4">
+        <Panel variant="compact" size="sm" className="space-y-3">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]">
             <div className="min-w-0">
               <label className="block text-sm font-semibold text-ink">
                 Titulo do template
                 <input
-                  className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-stone-800 outline-none transition focus:border-ember"
+                  className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-ember"
                   value={title}
                   disabled={viewOnlyPlatform}
                   onChange={(event) => setTitle(event.target.value)}
@@ -285,13 +290,13 @@ export function EditorPage() {
           </div>
 
           <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-stone-200 bg-white/70 px-4 py-3 text-sm text-stone-600">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl text-xs leading-5 sm:text-sm sm:leading-6">
               {mode === "overlay_logo"
-                ? "A camada de cima fica travada por padrao para voce alinhar so quando precisar. Depois da publicacao, ela continua fixa."
-                : "A moldura fica fixa por cima da foto. Aqui voce ajusta a foto e publica quando estiver do seu jeito."}
+                ? "A foto fica livre. Destrave a moldura apenas quando quiser ajustar a camada de cima."
+                : "A moldura fica fixa por cima da foto. Aqui voce so ajusta a imagem e segue para publicar."}
             </div>
-            <div className="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
-              Fluxo rapido
+            <div className="rounded-full bg-stone-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
+              Editor rapido
             </div>
           </div>
         </Panel>
