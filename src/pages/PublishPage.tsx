@@ -162,19 +162,19 @@ export function PublishPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-5">
       <Panel
         variant="hero"
-        size="lg"
+        size="md"
         className="bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.16),transparent_34%),linear-gradient(145deg,rgba(255,249,241,0.98),rgba(255,255,255,0.94))]"
       >
-        <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+        <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           {template.thumbnailUrl ? (
-            <div className="rounded-[30px] border border-white/90 bg-white/84 p-4 shadow-[0_24px_52px_-34px_rgba(22,19,18,0.22)]">
+            <div className="rounded-[26px] border border-white/90 bg-white/84 p-3 shadow-[0_24px_52px_-34px_rgba(22,19,18,0.22)]">
               <img
                 src={template.thumbnailUrl}
                 alt={templateTitle}
-                className="mx-auto aspect-[3/4] w-full max-w-[280px] rounded-[24px] object-contain"
+                className="mx-auto aspect-[3/4] w-full max-w-[220px] rounded-[20px] object-contain"
               />
             </div>
           ) : null}
@@ -183,7 +183,7 @@ export function PublishPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-ember">Publicacao</p>
-                <h1 className="mt-2 font-display text-4xl font-bold text-ink">{templateTitle}</h1>
+                <h1 className="mt-1.5 font-display text-3xl font-bold text-ink sm:text-4xl">{templateTitle}</h1>
               </div>
               <span className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700">
                 {formatTemplateStatusLabel(template.status)}
@@ -194,17 +194,17 @@ export function PublishPage() {
               {detailItems.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/90 bg-white/82 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(22,19,18,0.16)]"
+                  className="rounded-[20px] border border-white/90 bg-white/82 px-3.5 py-3 shadow-[0_18px_42px_-34px_rgba(22,19,18,0.16)]"
                 >
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
                     {item.label}
                   </div>
-                  <div className="mt-2 text-sm font-medium text-ink">{item.value}</div>
+                  <div className="mt-1.5 text-sm font-medium text-ink">{item.value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-[24px] border border-white/90 bg-white/78 px-4 py-4 text-sm leading-6 text-stone-600">
+            <div className="rounded-[20px] border border-white/90 bg-white/78 px-4 py-3 text-sm leading-5 text-stone-600">
               Organize o pagamento, acompanhe o status e libere o link publico sem sair desta etapa.
             </div>
           </div>

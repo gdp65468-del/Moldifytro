@@ -26,7 +26,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="space-y-8 pb-24 sm:space-y-10 md:pb-0">
+    <div className="space-y-6 pb-24 sm:space-y-8 md:pb-0">
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -103,25 +103,25 @@ export function LandingPage() {
         ) : null}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
         <Panel
           variant="hero"
-          size="lg"
+          size="md"
           className="bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.2),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(29,58,47,0.14),transparent_30%),linear-gradient(140deg,rgba(255,248,239,0.98),rgba(255,255,255,0.92))]"
         >
           <span className="inline-flex rounded-full border border-white/80 bg-white/88 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-ember">
             Studio Moldify
           </span>
-          <div className="mt-5 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="mt-4 grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div>
-              <h1 className="max-w-3xl font-display text-3xl font-bold leading-tight text-ink sm:text-5xl lg:text-6xl">
+              <h1 className="max-w-3xl font-display text-3xl font-bold leading-tight text-ink sm:text-4xl lg:text-5xl">
                 Crie molduras bonitas, publique seu link e deixe cada pessoa montar a propria arte.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-stone-700 sm:text-lg">
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-stone-700 sm:text-base">
                 Monte seus templates, aproveite molduras da plataforma e publique uma pagina simples,
                 bonita e pronta para divulgar no celular ou no desktop.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <Link to={user ? "/dashboard" : "/login"}>
                   <Button>{user ? "Abrir painel" : "Entrar para criar"}</Button>
                 </Link>
@@ -129,7 +129,7 @@ export function LandingPage() {
                   <Button variant="secondary">Ver como funciona</Button>
                 </Link>
               </div>
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
                   ["Edicao simples", "Envie a imagem, ajuste o enquadramento e exporte em poucos toques."],
                   ["Pagina publica", "Compartilhe um unico link para varias pessoas criarem a propria arte."],
@@ -137,42 +137,42 @@ export function LandingPage() {
                 ].map(([title, text]) => (
                   <div
                     key={title}
-                    className="rounded-[24px] border border-white/80 bg-white/76 p-4 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.18)]"
+                    className="rounded-[22px] border border-white/80 bg-white/76 p-3.5 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.18)]"
                   >
                     <div className="text-sm font-semibold text-ink">{title}</div>
-                    <p className="mt-2 text-sm leading-6 text-stone-600">{text}</p>
+                    <p className="mt-1.5 text-sm leading-5 text-stone-600">{text}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-[30px] border border-white/90 bg-white/84 p-5 shadow-[0_24px_50px_-34px_rgba(22,19,18,0.22)]">
+            <div className="grid gap-3">
+              <div className="rounded-[28px] border border-white/90 bg-white/84 p-4 shadow-[0_24px_50px_-34px_rgba(22,19,18,0.22)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ember">
                   Visao geral
                 </p>
-                <h3 className="mt-3 text-2xl font-semibold text-ink">Do envio da foto ao link publicado</h3>
-                <p className="mt-3 text-sm leading-6 text-stone-600">
+                <h3 className="mt-2 text-xl font-semibold text-ink">Do envio da foto ao link publicado</h3>
+                <p className="mt-2 text-sm leading-5 text-stone-600">
                   Um caminho claro para criar, publicar e compartilhar sem transformar a tela em painel
                   confuso.
                 </p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[22px] bg-[#fff6ea] p-4">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-[20px] bg-[#fff6ea] p-3.5">
                     <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Etapa</div>
-                    <div className="mt-2 text-lg font-semibold text-ink">Envio, ajuste e download</div>
+                    <div className="mt-1.5 text-base font-semibold text-ink">Envio, ajuste e download</div>
                   </div>
-                  <div className="rounded-[22px] bg-[#f3f6f1] p-4">
+                  <div className="rounded-[20px] bg-[#f3f6f1] p-3.5">
                     <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Entrega</div>
-                    <div className="mt-2 text-lg font-semibold text-ink">Link publico pronto para divulgar</div>
+                    <div className="mt-1.5 text-base font-semibold text-ink">Link publico pronto para divulgar</div>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/85 bg-white/76 p-5 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.16)]">
+              <div className="rounded-[24px] border border-white/85 bg-white/76 p-4 shadow-[0_18px_42px_-30px_rgba(22,19,18,0.16)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
                   Para quem serve
                 </p>
-                <p className="mt-3 text-sm leading-6 text-stone-600">
+                <p className="mt-2 text-sm leading-5 text-stone-600">
                   Eventos, escolas, igrejas, equipes, patrocinadores e campanhas que precisam de uma arte
                   pronta para compartilhar.
                 </p>

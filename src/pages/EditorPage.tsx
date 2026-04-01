@@ -188,117 +188,115 @@ export function EditorPage() {
         <Panel className={`p-4 text-sm ${topMessageClassName}`}>{message}</Panel>
       ) : null}
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[0.42fr_0.58fr]">
-        <div className="order-2 min-w-0 space-y-5 xl:order-1">
-          <Panel>
-            <label className="block text-sm font-semibold text-ink">
-              Titulo do template
-              <input
-                className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-stone-800 outline-none transition focus:border-ember"
-                value={title}
-                disabled={viewOnlyPlatform}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Ex.: Equipe Runners Norte"
-              />
-            </label>
-          </Panel>
+      <div className="space-y-5">
+        <Panel className="space-y-4 p-4 sm:p-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.95fr)]">
+            <div className="min-w-0">
+              <label className="block text-sm font-semibold text-ink">
+                Titulo do template
+                <input
+                  className="mt-2 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-stone-800 outline-none transition focus:border-ember"
+                  value={title}
+                  disabled={viewOnlyPlatform}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Ex.: Equipe Runners Norte"
+                />
+              </label>
+            </div>
 
-          <UploadField
-            title="Enviar foto"
-            subtitle="A foto do usuario e usada para montar o preview e a exportacao. Arquivos pesados sao otimizados."
-            accept="image/*"
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              if (!isImageFile(file)) {
-                setMessageTone("error");
-                setMessage("Selecione uma imagem valida para a foto.");
-                return;
-              }
-
-              if (!isAllowedPhotoSize(file)) {
-                setMessageTone("error");
-                setMessage("A foto esta grande demais. Use arquivos de ate 20 MB.");
-                return;
-              }
-
-              const optimizedFile = await compressImageFile(file as File, {
-                maxWidth: 1800,
-                maxHeight: 1800,
-                mimeType: "image/webp",
-                quality: 0.86,
-                skipBelowBytes: 2 * 1024 * 1024,
-              });
-
-              if (optimizedFile.size < (file as File).size) {
-                setMessageTone("info");
-                setMessage("Foto otimizada automaticamente para carregar mais rapido.");
-              }
-
-              setPhotoSrc(await fileToDataUrl(optimizedFile));
-            }}
-          />
-
-          {!viewOnlyPlatform ? (
             <UploadField
-              title={mode === "overlay_logo" ? "Enviar logo" : "Enviar moldura"}
-              subtitle={
-                mode === "overlay_logo"
-                  ? "PNG ou WebP transparente para ficar acima da foto. Imagens pesadas sao otimizadas."
-                  : "PNG ou WebP transparente cobrindo todo o canvas. Imagens pesadas sao otimizadas."
-              }
-              accept="image/png,image/webp"
+              compact
+              title="Enviar foto"
+              subtitle="Foto do visitante para o preview e a arte final."
+              accept="image/*"
               onChange={async (event) => {
                 const file = event.target.files?.[0];
-                if (!isFrameFile(file)) {
+                if (!isImageFile(file)) {
                   setMessageTone("error");
-                  setMessage("Envie um PNG ou WebP valido para a moldura.");
+                  setMessage("Selecione uma imagem valida para a foto.");
                   return;
                 }
 
-                if (!isAllowedFrameSize(file)) {
+                if (!isAllowedPhotoSize(file)) {
                   setMessageTone("error");
-                  setMessage("A moldura ou logo esta grande demais. Use arquivos de ate 12 MB.");
+                  setMessage("A foto esta grande demais. Use arquivos de ate 20 MB.");
                   return;
                 }
 
                 const optimizedFile = await compressImageFile(file as File, {
-                  maxWidth: 1600,
-                  maxHeight: 1600,
+                  maxWidth: 1800,
+                  maxHeight: 1800,
                   mimeType: "image/webp",
-                  quality: 0.9,
-                  skipBelowBytes: 1.5 * 1024 * 1024,
+                  quality: 0.86,
+                  skipBelowBytes: 2 * 1024 * 1024,
                 });
 
                 if (optimizedFile.size < (file as File).size) {
                   setMessageTone("info");
-                  setMessage("Moldura otimizada automaticamente para economizar armazenamento.");
+                  setMessage("Foto otimizada automaticamente para carregar mais rapido.");
                 }
 
-                setFrameFile(optimizedFile);
-                setFrameSrc(await fileToDataUrl(optimizedFile));
+                setPhotoSrc(await fileToDataUrl(optimizedFile));
               }}
             />
-          ) : null}
 
-          <Panel>
-            <h2 className="text-lg font-semibold text-ink">Como este fluxo funciona</h2>
-            <div className="mt-3 space-y-2 text-sm text-stone-600">
-              {mode === "overlay_logo" ? (
-                <>
-                  <p>A logo fica por cima da foto e o visitante tambem pode mover e redimensionar na pagina publica.</p>
-                  <p>O arquivo da logo nao pode ser trocado pelo visitante.</p>
-                </>
-              ) : (
-                <>
-                  <p>A moldura cobre todo o canvas e fica fixa acima da foto, como no prototipo atual.</p>
-                  <p>Na pagina publica, o visitante ajusta apenas a propria foto.</p>
-                </>
-              )}
+            {!viewOnlyPlatform ? (
+              <UploadField
+                compact
+                title={mode === "overlay_logo" ? "Enviar camada superior" : "Enviar moldura"}
+                subtitle={
+                  mode === "overlay_logo"
+                    ? "PNG ou WebP transparente para ficar por cima da foto."
+                    : "PNG ou WebP transparente cobrindo todo o canvas."
+                }
+                accept="image/png,image/webp"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!isFrameFile(file)) {
+                    setMessageTone("error");
+                    setMessage("Envie um PNG ou WebP valido para a moldura.");
+                    return;
+                  }
+
+                  if (!isAllowedFrameSize(file)) {
+                    setMessageTone("error");
+                    setMessage("A moldura ou logo esta grande demais. Use arquivos de ate 12 MB.");
+                    return;
+                  }
+
+                  const optimizedFile = await compressImageFile(file as File, {
+                    maxWidth: 1600,
+                    maxHeight: 1600,
+                    mimeType: "image/webp",
+                    quality: 0.9,
+                    skipBelowBytes: 1.5 * 1024 * 1024,
+                  });
+
+                  if (optimizedFile.size < (file as File).size) {
+                    setMessageTone("info");
+                    setMessage("Moldura otimizada automaticamente para economizar armazenamento.");
+                  }
+
+                  setFrameFile(optimizedFile);
+                  setFrameSrc(await fileToDataUrl(optimizedFile));
+                }}
+              />
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-stone-200 bg-white/70 px-4 py-3 text-sm text-stone-600">
+            <div className="max-w-3xl">
+              {mode === "overlay_logo"
+                ? "A camada de cima fica travada por padrao para voce alinhar so quando precisar. Depois da publicacao, ela continua fixa."
+                : "A moldura fica fixa por cima da foto. Aqui voce ajusta a foto e publica quando estiver do seu jeito."}
             </div>
-          </Panel>
-        </div>
+            <div className="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
+              Fluxo rapido
+            </div>
+          </div>
+        </Panel>
 
-        <div className="order-1 min-w-0 xl:order-2">
+        <div className="min-w-0">
           <CanvasEditor
             ref={editorRef}
             templateMode={mode}
@@ -309,8 +307,8 @@ export function EditorPage() {
             usePlatformPreset={Boolean(selectedPlatform)}
             helperText={
               mode === "overlay_logo"
-                ? "No celular, arraste com um dedo e use pinch ou o slider para ajustar foto e logo."
-                : "No celular, arraste com um dedo e use pinch ou o slider para ajustar a foto."
+                ? "No celular, arraste a foto e destrave a camada de cima so quando quiser alinhar."
+                : "No celular, arraste a foto com um dedo e use o zoom quando precisar."
             }
           />
         </div>

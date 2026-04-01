@@ -126,7 +126,7 @@ export function DashboardPage() {
   );
 
   return (
-    <div className="space-y-8 pb-24 md:pb-0">
+    <div className="space-y-6 pb-24 md:pb-0">
       <ConfirmModal
         open={Boolean(confirmState)}
         title={confirmState?.title ?? ""}
@@ -140,23 +140,23 @@ export function DashboardPage() {
         }}
       />
 
-      <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <Panel
           variant="hero"
-          size="lg"
+          size="md"
           className="bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(29,58,47,0.12),transparent_30%),linear-gradient(145deg,rgba(255,249,241,0.97),rgba(255,255,255,0.94))]"
         >
           <span className="inline-flex rounded-full border border-white/90 bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ember">
             Sua area de criacao
           </span>
-          <div className="mt-5 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+          <div className="mt-4 grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
-              <h1 className="font-display text-4xl font-bold text-ink">Seu painel de criacao</h1>
-              <p className="mt-3 max-w-2xl text-stone-600">
+              <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">Seu painel de criacao</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
                 Crie templates com moldura completa ou logo sobreposta, salve rascunhos e publique quando
                 o pagamento estiver aprovado.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-3">
                 <Link to="/editor/new/frame">
                   <Button>Criar moldura completa</Button>
                 </Link>
@@ -167,23 +167,23 @@ export function DashboardPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-[24px] border border-white/80 bg-white/80 p-4 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
+              <div className="rounded-[22px] border border-white/80 bg-white/80 p-3.5 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Templates</div>
-                <div className="mt-2 text-2xl font-semibold text-ink">
+                <div className="mt-1.5 text-2xl font-semibold text-ink">
                   {isDashboardLoading ? "..." : userTemplates.length}
                 </div>
               </div>
-              <div className="rounded-[24px] border border-white/80 bg-white/80 p-4 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
+              <div className="rounded-[22px] border border-white/80 bg-white/80 p-3.5 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Publicos</div>
-                <div className="mt-2 text-2xl font-semibold text-ink">
+                <div className="mt-1.5 text-2xl font-semibold text-ink">
                   {isDashboardLoading
                     ? "..."
                     : userTemplates.filter((template) => template.status === "published").length}
                 </div>
               </div>
-              <div className="rounded-[24px] border border-white/80 bg-white/80 p-4 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
+              <div className="rounded-[22px] border border-white/80 bg-white/80 p-3.5 shadow-[0_18px_40px_-32px_rgba(22,19,18,0.15)]">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">Downloads</div>
-                <div className="mt-2 text-2xl font-semibold text-ink">
+                <div className="mt-1.5 text-2xl font-semibold text-ink">
                   {isDashboardLoading
                     ? "..."
                     : userTemplates.reduce((sum, template) => sum + (template.downloadsCount ?? 0), 0)}
@@ -193,18 +193,18 @@ export function DashboardPage() {
           </div>
         </Panel>
 
-        <Panel variant="dark" size="lg">
+        <Panel variant="dark" size="md">
           <h2 className="font-display text-2xl font-bold">Seu plano atual</h2>
-          <p className="mt-4 text-sm text-stone-200">Plano gratuito com publicacao unitara por template.</p>
-          <div className="mt-6 grid gap-4">
-            <div className="rounded-[24px] bg-white/10 p-4">
+          <p className="mt-3 text-sm text-stone-200">Plano gratuito com publicacao unitara por template.</p>
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-[22px] bg-white/10 p-3.5">
               <div className="text-xs uppercase tracking-[0.18em] text-stone-300">Publicacao</div>
-              <div className="mt-2 text-3xl font-semibold text-white">R$ 5,90</div>
-              <p className="mt-2 text-sm text-stone-200">Liberacao por template publicado.</p>
+              <div className="mt-1.5 text-3xl font-semibold text-white">R$ 5,90</div>
+              <p className="mt-1.5 text-sm text-stone-200">Liberacao por template publicado.</p>
             </div>
-            <div className="rounded-[24px] border border-white/10 bg-white/6 p-4">
+            <div className="rounded-[22px] border border-white/10 bg-white/6 p-3.5">
               <div className="text-xs uppercase tracking-[0.18em] text-stone-300">Modelo</div>
-              <p className="mt-2 text-sm leading-6 text-stone-200">
+              <p className="mt-1.5 text-sm leading-5 text-stone-200">
                 Crie, aprove, publique e compartilhe sem sair da mesma experiencia.
               </p>
             </div>

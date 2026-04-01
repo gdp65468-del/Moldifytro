@@ -51,7 +51,7 @@ export function TemplatePublicPage() {
       : "Envie sua foto, encaixe no quadro e baixe sua lembranca pronta em poucos segundos.";
   const editorHelper =
     template.templateMode === "overlay_logo"
-      ? "Arraste a foto ou a logo, ajuste com zoom e baixe quando a composicao estiver do seu jeito."
+      ? "Arraste a foto, ajuste o enquadramento e baixe. A identidade visual publicada ja entra fixa na arte."
       : "Arraste a foto, aproxime se quiser e baixe sua imagem final ja dentro da moldura.";
 
   async function copyTextWithFallback(text: string) {
@@ -173,36 +173,7 @@ export function TemplatePublicPage() {
             </div>
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-[32px] border border-white/80 bg-white/80 p-4 shadow-[0_24px_70px_-42px_rgba(29,58,47,0.45)] sm:p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ember">
-                    Previa da campanha
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-stone-600">
-                    {template.templateMode === "overlay_logo"
-                      ? "Ideal para destacar sua identidade sobre a arte final."
-                      : "Pronto para publicar uma lembranca visual com a moldura completa."}
-                  </p>
-                </div>
-                <span className="rounded-full bg-[#f8efe2] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-700">
-                  PNG final
-                </span>
-              </div>
-
-              <div className="mt-5 overflow-hidden rounded-[28px] border border-stone-200 bg-[#fcfbf7] p-4">
-                <div className="mx-auto aspect-[2/3] w-full max-w-[250px] overflow-hidden rounded-[22px] bg-white shadow-[0_16px_40px_-28px_rgba(17,24,39,0.45)]">
-                  <img
-                    src={template.frameUrl}
-                    alt={`Previa da arte ${template.title}`}
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <div className="rounded-[24px] border border-white/85 bg-white/74 px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">
                   Edicao livre
@@ -219,7 +190,6 @@ export function TemplatePublicPage() {
                   Envie sua foto, ajuste do seu jeito e baixe a arte pronta sem precisar criar conta.
                 </p>
               </div>
-            </div>
           </div>
         </div>
       </Panel>
@@ -256,10 +226,10 @@ export function TemplatePublicPage() {
               frameSrc={template.frameUrl}
               photoSrc={photoSrc}
               initialOverlayConfig={template.overlayConfig}
-              overlayEditable={template.templateMode === "overlay_logo"}
+              overlayEditable={false}
               helperText={
                 template.templateMode === "overlay_logo"
-                  ? "Toque e arraste a foto ou a logo. Use dois dedos para zoom da foto e o controle para ajustes finos."
+                  ? "Arraste a foto livremente. A identidade visual publicada ja fica fixa do jeito que foi configurada."
                   : "Toque e arraste a foto. Use dois dedos ou o controle de zoom para aproximar."
               }
               onDownload={() => {

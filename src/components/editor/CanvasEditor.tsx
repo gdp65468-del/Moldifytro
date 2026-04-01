@@ -227,8 +227,8 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const [activeLayer, setActiveLayer] = useState<ActiveLayer>(
       templateMode === "overlay_logo" ? "overlay" : "photo",
     );
-    const [photoLocked, setPhotoLocked] = useState(true);
-    const [overlayLocked, setOverlayLocked] = useState(false);
+    const [photoLocked, setPhotoLocked] = useState(false);
+    const [overlayLocked, setOverlayLocked] = useState(true);
     const [showFineControls, setShowFineControls] = useState(false);
     const [canShare, setCanShare] = useState(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -242,10 +242,10 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }, []);
 
     useEffect(() => {
-      setPhotoLocked(true);
-      setOverlayLocked(false);
+      setPhotoLocked(false);
+      setOverlayLocked(true);
       setShowFineControls(false);
-      setActiveLayer(templateMode === "overlay_logo" ? "overlay" : "photo");
+      setActiveLayer("photo");
     }, [templateMode]);
 
     useEffect(() => {
@@ -358,15 +358,13 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     const isOverlayMode = templateMode === "overlay_logo";
     const isPhotoActive = activeLayer === "photo";
     const isOverlayActive = isOverlayMode && activeLayer === "overlay";
-    const activeLayerLocked = isOverlayActive ? overlayLocked : photoLocked;
-    const activeLayerLabel = isOverlayActive ? "Logo" : "Foto";
-    const interactionHint = isOverlayActive
+    const activeLayerLocked = isOverlayActive ? overlayLocked : false;
+    const topLayerLabel = isOverlayMode ? "Camada superior" : "Moldura";
+    const interactionHint = isOverlayMode
       ? overlayLocked
-        ? "A logo esta travada. Toque no cadeado para destravar e mover."
-        : "Arraste a logo para posicionar. Quando precisar, use os ajustes finos."
-      : photoLocked
-        ? "A foto esta travada. Toque no cadeado para destravar e mover."
-        : "Arraste a foto livremente para encaixar do jeito que quiser.";
+        ? "A camada superior esta travada. A foto ja esta livre para voce ajustar."
+        : "A camada superior esta destravada. Arraste para alinhar e trave de novo quando terminar."
+      : "Arraste a foto livremente para encaixar do jeito que quiser.";
 
     function handlePhotoZoomChange(nextZoom: number) {
       if (!photoState || !photoImage || photoLocked) {
@@ -602,10 +600,10 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
     }
 
     function resetScene() {
-      setPhotoLocked(true);
-      setOverlayLocked(false);
+      setPhotoLocked(false);
+      setOverlayLocked(true);
       setShowFineControls(false);
-      setActiveLayer(templateMode === "overlay_logo" ? "overlay" : "photo");
+      setActiveLayer("photo");
 
       if (photoImage) {
         setPhotoState(clampPhoto(fitImage(photoImage, photoTarget), photoImage, photoTarget));
@@ -652,14 +650,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
       );
     }
 
-    function togglePhotoLock() {
-      setPhotoLocked((current) => !current);
-      setActiveLayer("photo");
-    }
-
     function toggleOverlayLock() {
       setOverlayLocked((current) => !current);
-      setActiveLayer("overlay");
+      setActiveLayer((current) => (current === "overlay" ? "photo" : "overlay"));
     }
 
     function getExportDataUrl() {
@@ -743,23 +736,29 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           >
             <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3">
               <div className="rounded-full border border-white/70 bg-white/88 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-                {activeLayerLabel} em edicao
+                {isOverlayMode ? `${topLayerLabel} fixa` : "Foto em edicao"}
               </div>
               <div
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur ${
-                  activeLayerLocked
+                  isOverlayMode && overlayLocked
                     ? "border border-amber-200 bg-amber-50/95 text-amber-700"
                     : "border border-emerald-200 bg-emerald-50/95 text-emerald-700"
                 }`}
               >
-                {activeLayerLocked ? "Cadeado ligado" : "Livre para mover"}
+                {isOverlayMode
+                  ? overlayLocked
+                    ? "Cadeado da moldura ligado"
+                    : "Moldura destravada"
+                  : "Foto livre para mover"}
               </div>
             </div>
 
             <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/70 bg-white/82 px-3 py-2 text-xs text-stone-600 shadow-[0_14px_35px_rgba(36,31,21,0.12)] backdrop-blur">
-              {activeLayerLocked
-                ? `Toque em "Destravar ${activeLayerLabel.toLowerCase()}" para mover com o dedo.`
-                : `Arraste a ${activeLayerLabel.toLowerCase()} livremente dentro da arte.`}
+              {isOverlayMode
+                ? overlayLocked
+                  ? 'A foto ja esta livre. Toque em "Destravar moldura" se quiser ajustar a camada de cima.'
+                  : 'Mova a moldura do jeito que quiser e trave de novo quando terminar.'
+                : "Arraste a foto livremente dentro da arte."}
             </div>
             <Stage
               ref={stageRef}
@@ -839,7 +838,9 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
         <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/70 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-sm font-semibold text-ink">Camada em edicao</div>
+              <div className="text-sm font-semibold text-ink">
+                {isOverlayMode ? "Ajuste da moldura" : "Ajuste da foto"}
+              </div>
               <div className="text-xs text-stone-500">{interactionHint}</div>
             </div>
             <Button variant="ghost" onClick={() => setShowFineControls((current) => !current)}>
@@ -850,32 +851,23 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           {isOverlayMode ? (
             <div className="flex flex-wrap gap-3">
               <Button
-                variant={isPhotoActive ? "primary" : "secondary"}
+                variant="secondary"
                 onClick={() => setActiveLayer("photo")}
               >
-                Foto
-              </Button>
-              <Button variant={photoLocked ? "secondary" : "ghost"} onClick={togglePhotoLock}>
-                {photoLocked ? "Destravar foto" : "Travar foto"}
+                Foto livre
               </Button>
               <Button
-                variant={isOverlayActive ? "primary" : "secondary"}
-                onClick={() => setActiveLayer("overlay")}
+                variant={overlayLocked ? "secondary" : "primary"}
+                onClick={toggleOverlayLock}
               >
-                Logo
-              </Button>
-              <Button variant={overlayLocked ? "secondary" : "ghost"} onClick={toggleOverlayLock}>
-                {overlayLocked ? "Destravar logo" : "Travar logo"}
+                {overlayLocked ? "Destravar moldura" : "Travar moldura"}
               </Button>
             </div>
           ) : (
             <div className="flex flex-wrap gap-3">
               <span className="inline-flex items-center justify-center rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white">
-                Foto
+                Foto livre
               </span>
-              <Button variant={photoLocked ? "secondary" : "ghost"} onClick={togglePhotoLock}>
-                {photoLocked ? "Destravar foto" : "Travar foto"}
-              </Button>
             </div>
           )}
         </div>
@@ -977,8 +969,8 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
           <div>
             {helperText ??
               (isOverlayMode
-                ? "Use o zoom para ajustar a camada ativa. Quando precisar, destrave a foto para mover livremente."
-                : "Destrave a foto para mover, ajuste o zoom e baixe quando estiver do seu jeito.")}
+                ? "A foto ja fica livre. Se quiser alinhar a camada de cima, destrave a moldura, ajuste e trave novamente."
+                : "Arraste a foto, ajuste o zoom e baixe quando estiver do seu jeito.")}
           </div>
         </div>
 

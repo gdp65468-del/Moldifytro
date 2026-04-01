@@ -78,16 +78,17 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-5">
       <Panel
         variant="hero"
+        size="md"
         className="bg-[radial-gradient(circle_at_top_left,rgba(204,95,26,0.16),transparent_34%),linear-gradient(145deg,rgba(255,249,241,0.98),rgba(255,255,255,0.94))]"
       >
-        <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-start">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.18em] text-ember">Checkout</p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-ink">Pagamento de apoio</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">
+            <h1 className="mt-1.5 font-display text-3xl font-bold text-ink sm:text-4xl">Pagamento de apoio</h1>
+            <p className="mt-2 max-w-xl text-sm leading-5 text-stone-600">
               Esta tela existe como apoio. O fluxo principal continua na publicacao, mas voce ainda pode
               acompanhar o status daqui.
             </p>
@@ -97,7 +98,7 @@ export function CheckoutPage() {
           </div>
         </div>
 
-        <div className="mt-5 rounded-[24px] border border-white/90 bg-white/82 p-5">
+        <div className="mt-4 rounded-[20px] border border-white/90 bg-white/82 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-medium text-ink">{template.title}</span>
             <span className="rounded-full bg-[#f8efe2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-stone-700">

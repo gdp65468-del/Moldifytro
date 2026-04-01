@@ -24,14 +24,14 @@ export function SignupPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <Panel className="text-center">
-        <h1 className="font-display text-2xl font-bold text-ink sm:text-4xl">Criar conta no Moldify</h1>
-        <p className="mt-3 text-sm leading-6 text-stone-600 sm:text-base">
+      <Panel size="sm" className="text-center">
+        <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">Criar conta no Moldify</h1>
+        <p className="mt-2 text-sm leading-5 text-stone-600 sm:text-base">
           Crie sua conta para montar templates, publicar links e organizar seu trabalho em um so lugar.
         </p>
 
         <Button
-          className="mt-8 w-full"
+          className="mt-6 w-full"
           variant="secondary"
           onClick={async () => {
             setError(null);
@@ -50,13 +50,13 @@ export function SignupPage() {
           Continuar com Google
         </Button>
 
-        <div className="mt-5 flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-stone-400">
+        <div className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-stone-400">
           <span className="h-px flex-1 bg-stone-200" />
           <span>ou</span>
           <span className="h-px flex-1 bg-stone-200" />
         </div>
 
-        <label className="mt-5 block text-left text-sm font-semibold text-ink">
+        <label className="mt-4 block text-left text-sm font-semibold text-ink">
           E-mail
           <input
             type="email"
@@ -68,7 +68,7 @@ export function SignupPage() {
           />
         </label>
 
-        <label className="mt-4 block text-left text-sm font-semibold text-ink">
+        <label className="mt-3 block text-left text-sm font-semibold text-ink">
           Senha
           <input
             type="password"
@@ -80,7 +80,7 @@ export function SignupPage() {
           />
         </label>
 
-        <label className="mt-4 block text-left text-sm font-semibold text-ink">
+        <label className="mt-3 block text-left text-sm font-semibold text-ink">
           Confirmar senha
           <input
             type="password"
@@ -93,7 +93,7 @@ export function SignupPage() {
         </label>
 
         <Button
-          className="mt-6 w-full"
+          className="mt-5 w-full"
           onClick={async () => {
             setError(null);
             setMessage(null);
@@ -130,18 +130,18 @@ export function SignupPage() {
         </Button>
 
         {error ? (
-          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-left text-sm text-red-700">
+          <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-left text-sm text-red-700">
             {error}
           </p>
         ) : null}
 
         {message ? (
-          <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-left text-sm text-emerald-700">
+          <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-left text-sm text-emerald-700">
             {message}
           </p>
         ) : null}
 
-        <p className="mt-4 text-sm text-stone-500">
+        <p className="mt-3 text-sm text-stone-500">
           Ja tem uma conta?{" "}
           <Link to="/login" className="font-semibold text-ember">
             Entrar
