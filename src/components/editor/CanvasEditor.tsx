@@ -49,7 +49,7 @@ interface TextState {
 }
 
 type ActiveLayer = "photo" | "overlay" | "text";
-type EditorDock = "photo" | "text" | "overlay" | "adjust";
+type EditorDock = "photo" | "text" | "overlay" | "adjust" | "output";
 
 interface Point {
   x: number;
@@ -1118,11 +1118,15 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
 
               <button
                 type="button"
-                className="inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] bg-white px-3 py-2 text-[11px] font-bold text-stone-700 transition hover:text-ember"
-                onClick={handleDownload}
+                className={`inline-flex min-w-[78px] flex-col items-center justify-center rounded-[18px] px-3 py-2 text-[11px] font-bold transition ${
+                  activeDock === "output"
+                    ? "bg-ember text-white shadow-lg shadow-orange-500/20"
+                    : "bg-white text-stone-700"
+                }`}
+                onClick={() => setActiveDock("output")}
               >
                 <span className="text-base leading-none">↓</span>
-                <span className="mt-1">Baixar</span>
+                <span className="mt-1">Saida</span>
               </button>
             </div>
           </div>
@@ -1380,14 +1384,33 @@ export const CanvasEditor = forwardRef<CanvasEditorHandle, CanvasEditorProps>(
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={resetScene}>
+                Comecar de novo
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {activeDock === "output" ? (
+          <div className="grid gap-3 rounded-[24px] border border-stone-200 bg-stone-50/80 p-3.5 sm:p-4">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500">
+                Finalizar
+              </div>
+              <div className="mt-1 text-xs leading-5 text-stone-600">
+                Baixe a imagem final ou compartilhe direto daqui.
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" className="text-xs sm:text-sm" onClick={handleDownload}>
+                Baixar imagem
+              </Button>
               {canShare ? (
                 <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={() => void handleShare()}>
                   Compartilhar
                 </Button>
               ) : null}
-              <Button type="button" variant="secondary" className="text-xs sm:text-sm" onClick={resetScene}>
-                Comecar de novo
-              </Button>
             </div>
           </div>
         ) : null}
